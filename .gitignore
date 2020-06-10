@@ -1,0 +1,12 @@
+# Misc
+._*
+.DS_Store
+
+# IDE
+.vscode
+
+# Code & Data
+bin/
+data/*.sqlite3
+coverage.out
+coverage.html
