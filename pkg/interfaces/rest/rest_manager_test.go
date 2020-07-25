@@ -1,19 +1,19 @@
-package http_test
+package rest_test
 
 import (
 	"github.com/stretchr/testify/assert"
-	"go-issue-tracker/pkg/interfaces/http"
+	"go-issue-tracker/pkg/interfaces/rest"
 	ucTesting "go-issue-tracker/pkg/usecases/testing"
 	"testing"
 )
 
-func TestNewRESTUseCase(t *testing.T) {
+func TestNewManager(t *testing.T) {
 	cucm := new(ucTesting.ColorUseCaseMock)
 	iucm := new(ucTesting.IssueUseCaseMock)
 	lucm := new(ucTesting.LabelUseCaseMock)
 	pucm := new(ucTesting.ProjectUseCaseMock)
 
-	ruc := http.NewRESTUseCase(iucm, lucm, pucm, cucm)
+	m := rest.NewManager(iucm, lucm, pucm, cucm)
 
-	assert.NotNil(t, ruc)
+	assert.NotNil(t, m)
 }

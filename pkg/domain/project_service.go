@@ -5,6 +5,7 @@ type ProjectService interface {
 	Add(project *Project) (*Project, error)
 	Update(project Project) (Project, error)
 	FindByID(id uint) (Project, error)
+	Find(name string) ([]Project, error)
 	FindAll() ([]Project, error)
 	Remove(id uint) (bool, error)
 }
@@ -54,6 +55,15 @@ func (s *projectService) FindByID(id uint) (Project, error) {
 		return item, err
 	}
 	return item, nil
+}
+
+// Find to find projects
+func (s *projectService) Find(name string) ([]Project, error) {
+	items, err := s.repository.Find(name)
+	if err != nil {
+		return items, err
+	}
+	return items, nil
 }
 
 // FindAll to find all projects

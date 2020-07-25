@@ -66,35 +66,35 @@ func TestDomainIssueGetDefaultIssueService(t *testing.T) {
 }
 
 func TestDomainIssueAdd(t *testing.T) {
-	v := new(domain.Issue)
-	v.Title = "test-title"
-	v.Description = "test-description"
-	v.Status = 1
-	v.ProjectID = 1
+	i := new(domain.Issue)
+	i.Title = "test-title"
+	i.Description = "test-description"
+	i.Status = 1
+	i.ProjectID = 1
 
 	m := new(dTesting.IssueRepositoryMock)
-	m.On("Add", v).Return(v, nil)
+	m.On("Add", i).Return(i, nil)
 
 	s := domain.GetDefaultIssueService(m)
 
-	item, err := s.Add(v)
+	item, err := s.Add(i)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, i, item)
 
 	m.AssertExpectations(t)
 }
 
 func TestDomainIssueAddErr(t *testing.T) {
-	v := new(domain.Issue)
+	i := new(domain.Issue)
 
 	m := new(dTesting.IssueRepositoryMock)
-	m.On("Add", v).Return(v, errors.New("test error"))
+	m.On("Add", i).Return(i, errors.New("test error"))
 
 	s := domain.GetDefaultIssueService(m)
 
-	item, err := s.Add(v)
+	item, err := s.Add(i)
 
 	assert.NotNil(t, err)
 	assert.Nil(t, item)
@@ -104,18 +104,18 @@ func TestDomainIssueAddErr(t *testing.T) {
 
 func TestDomainIssueAddValidateLabelsErr(t *testing.T) {
 	l := testLabels
-	v := new(domain.Issue)
-	v.Title = "test-title"
-	v.Description = "test-description"
-	v.Status = 1
-	v.ProjectID = 1
-	v.Labels = l
+	i := new(domain.Issue)
+	i.Title = "test-title"
+	i.Description = "test-description"
+	i.Status = 1
+	i.ProjectID = 1
+	i.Labels = l
 
 	m := new(dTesting.IssueRepositoryMock)
 
 	s := domain.GetDefaultIssueService(m)
 
-	item, err := s.Add(v)
+	item, err := s.Add(i)
 
 	assert.NotNil(t, err)
 	assert.Nil(t, item)
@@ -124,7 +124,7 @@ func TestDomainIssueAddValidateLabelsErr(t *testing.T) {
 }
 
 func TestDomainIssueUpdate(t *testing.T) {
-	v := domain.Issue{
+	i := domain.Issue{
 		ID:          1,
 		Title:       "test-title",
 		Description: "test-description",
@@ -133,38 +133,38 @@ func TestDomainIssueUpdate(t *testing.T) {
 	}
 
 	m := new(dTesting.IssueRepositoryMock)
-	m.On("Update", v).Return(v, nil)
+	m.On("Update", i).Return(i, nil)
 
 	s := domain.GetDefaultIssueService(m)
 
-	item, err := s.Update(v)
+	item, err := s.Update(i)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, i, item)
 
 	m.AssertExpectations(t)
 }
 
 func TestDomainIssueUpdateErr(t *testing.T) {
-	v := domain.Issue{}
+	i := domain.Issue{}
 
 	m := new(dTesting.IssueRepositoryMock)
-	m.On("Update", v).Return(v, errors.New("test error"))
+	m.On("Update", i).Return(i, errors.New("test error"))
 
 	s := domain.GetDefaultIssueService(m)
 
-	item, err := s.Update(v)
+	item, err := s.Update(i)
 
 	assert.NotNil(t, err)
-	assert.Equal(t, v, item)
+	assert.Equal(t, i, item)
 
 	m.AssertExpectations(t)
 }
 
 func TestDomainIssueUpdateValidateLabelsErr(t *testing.T) {
 	l := testLabels
-	v := domain.Issue{
+	i := domain.Issue{
 		Labels: l,
 	}
 
@@ -172,16 +172,16 @@ func TestDomainIssueUpdateValidateLabelsErr(t *testing.T) {
 
 	s := domain.GetDefaultIssueService(m)
 
-	item, err := s.Update(v)
+	item, err := s.Update(i)
 
 	assert.NotNil(t, err)
-	assert.Equal(t, v, item)
+	assert.Equal(t, i, item)
 
 	m.AssertExpectations(t)
 }
 
 func TestDomainIssueFindByID(t *testing.T) {
-	v := domain.Issue{
+	i := domain.Issue{
 		ID:          1,
 		Title:       "test-title",
 		Description: "test-description",
@@ -190,31 +190,64 @@ func TestDomainIssueFindByID(t *testing.T) {
 	}
 
 	m := new(dTesting.IssueRepositoryMock)
-	m.On("FindByID", v.ID).Return(v, nil)
+	m.On("FindByID", i.ID).Return(i, nil)
 
 	s := domain.GetDefaultIssueService(m)
 
-	item, err := s.FindByID(v.ID)
+	item, err := s.FindByID(i.ID)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, i, item)
 
 	m.AssertExpectations(t)
 }
 
 func TestDomainIssueFindByIDErr(t *testing.T) {
-	v := domain.Issue{}
+	i := domain.Issue{}
 
 	m := new(dTesting.IssueRepositoryMock)
-	m.On("FindByID", uint(1)).Return(v, errors.New("test error"))
+	m.On("FindByID", uint(1)).Return(i, errors.New("test error"))
 
 	s := domain.GetDefaultIssueService(m)
 
 	item, err := s.FindByID(uint(1))
 
 	assert.NotNil(t, err)
-	assert.Equal(t, v, item)
+	assert.Equal(t, i, item)
+
+	m.AssertExpectations(t)
+}
+
+func TestDomainIssueFind(t *testing.T) {
+	v := []domain.Issue{}
+
+	m := new(dTesting.IssueRepositoryMock)
+	m.On("Find", "test", uint(1), []string{"test1", "test2"}).Return(v, nil)
+
+	s := domain.GetDefaultIssueService(m)
+
+	items, err := s.Find("test", uint(1), []string{"test1", "test2"})
+
+	assert.Nil(t, err)
+	assert.NotNil(t, items)
+	assert.Equal(t, v, items)
+
+	m.AssertExpectations(t)
+}
+
+func TestDomainIssueFindErr(t *testing.T) {
+	v := []domain.Issue{}
+
+	m := new(dTesting.IssueRepositoryMock)
+	m.On("Find", "test", uint(1), []string{"test1", "test2"}).Return(v, errors.New("test error"))
+
+	s := domain.GetDefaultIssueService(m)
+
+	items, err := s.Find("test", uint(1), []string{"test1", "test2"})
+
+	assert.NotNil(t, err)
+	assert.Equal(t, v, items)
 
 	m.AssertExpectations(t)
 }

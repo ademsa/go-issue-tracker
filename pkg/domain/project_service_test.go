@@ -30,33 +30,33 @@ func TestDomainProjectGetDefaultProjectService(t *testing.T) {
 }
 
 func TestDomainProjectAdd(t *testing.T) {
-	v := new(domain.Project)
-	v.Name = "test-name"
-	v.Description = "test-description"
+	p := new(domain.Project)
+	p.Name = "test-name"
+	p.Description = "test-description"
 
 	m := new(dTesting.ProjectRepositoryMock)
-	m.On("Add", v).Return(v, nil)
+	m.On("Add", p).Return(p, nil)
 
 	s := domain.GetDefaultProjectService(m)
 
-	item, err := s.Add(v)
+	item, err := s.Add(p)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, p, item)
 
 	m.AssertExpectations(t)
 }
 
 func TestDomainProjectAddErr(t *testing.T) {
-	v := new(domain.Project)
+	p := new(domain.Project)
 
 	m := new(dTesting.ProjectRepositoryMock)
-	m.On("Add", v).Return(v, errors.New("test error"))
+	m.On("Add", p).Return(p, errors.New("test error"))
 
 	s := domain.GetDefaultProjectService(m)
 
-	item, err := s.Add(v)
+	item, err := s.Add(p)
 
 	assert.NotNil(t, err)
 	assert.Nil(t, item)
@@ -65,75 +65,108 @@ func TestDomainProjectAddErr(t *testing.T) {
 }
 
 func TestDomainProjectUpdate(t *testing.T) {
-	v := domain.Project{
+	p := domain.Project{
 		ID:          1,
 		Name:        "test-name",
 		Description: "test-description",
 	}
 
 	m := new(dTesting.ProjectRepositoryMock)
-	m.On("Update", v).Return(v, nil)
+	m.On("Update", p).Return(p, nil)
 
 	s := domain.GetDefaultProjectService(m)
 
-	item, err := s.Update(v)
+	item, err := s.Update(p)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, p, item)
 
 	m.AssertExpectations(t)
 }
 
 func TestDomainProjectUpdateErr(t *testing.T) {
-	v := domain.Project{}
+	p := domain.Project{}
 
 	m := new(dTesting.ProjectRepositoryMock)
-	m.On("Update", v).Return(v, errors.New("test error"))
+	m.On("Update", p).Return(p, errors.New("test error"))
 
 	s := domain.GetDefaultProjectService(m)
 
-	item, err := s.Update(v)
+	item, err := s.Update(p)
 
 	assert.NotNil(t, err)
-	assert.Equal(t, v, item)
+	assert.Equal(t, p, item)
 
 	m.AssertExpectations(t)
 }
 
 func TestDomainProjectFindByID(t *testing.T) {
-	v := domain.Project{
+	p := domain.Project{
 		ID:          1,
 		Name:        "test-name",
 		Description: "test-description",
 	}
 
 	m := new(dTesting.ProjectRepositoryMock)
-	m.On("FindByID", v.ID).Return(v, nil)
+	m.On("FindByID", p.ID).Return(p, nil)
 
 	s := domain.GetDefaultProjectService(m)
 
-	item, err := s.FindByID(v.ID)
+	item, err := s.FindByID(p.ID)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, p, item)
 
 	m.AssertExpectations(t)
 }
 
 func TestDomainProjectFindByIDErr(t *testing.T) {
-	v := domain.Project{}
+	p := domain.Project{}
 
 	m := new(dTesting.ProjectRepositoryMock)
-	m.On("FindByID", uint(1)).Return(v, errors.New("test error"))
+	m.On("FindByID", uint(1)).Return(p, errors.New("test error"))
 
 	s := domain.GetDefaultProjectService(m)
 
 	item, err := s.FindByID(uint(1))
 
 	assert.NotNil(t, err)
-	assert.Equal(t, v, item)
+	assert.Equal(t, p, item)
+
+	m.AssertExpectations(t)
+}
+
+func TestDomainProjectFind(t *testing.T) {
+	v := []domain.Project{}
+
+	m := new(dTesting.ProjectRepositoryMock)
+	m.On("Find", "test").Return(v, nil)
+
+	s := domain.GetDefaultProjectService(m)
+
+	items, err := s.Find("test")
+
+	assert.Nil(t, err)
+	assert.NotNil(t, items)
+	assert.Equal(t, v, items)
+
+	m.AssertExpectations(t)
+}
+
+func TestDomainProjectFindErr(t *testing.T) {
+	v := []domain.Project{}
+
+	m := new(dTesting.ProjectRepositoryMock)
+	m.On("Find", "test").Return(v, errors.New("test error"))
+
+	s := domain.GetDefaultProjectService(m)
+
+	items, err := s.Find("test")
+
+	assert.NotNil(t, err)
+	assert.Equal(t, v, items)
 
 	m.AssertExpectations(t)
 }

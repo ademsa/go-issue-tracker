@@ -35,13 +35,13 @@ func TestUseCaseIssueAdd(t *testing.T) {
 			Name: "test-name",
 		},
 	}
-	v := new(domain.Issue)
-	v.Title = "test-title"
-	v.Description = "test-description"
-	v.Status = 1
-	v.ProjectID = p.ID
-	v.Project = p
-	v.Labels = []domain.Label{
+	i := new(domain.Issue)
+	i.Title = "test-title"
+	i.Description = "test-description"
+	i.Status = 1
+	i.ProjectID = p.ID
+	i.Project = p
+	i.Labels = []domain.Label{
 		domain.Label{
 			ID:   1,
 			Name: "test-name",
@@ -49,7 +49,7 @@ func TestUseCaseIssueAdd(t *testing.T) {
 	}
 
 	ms := new(dTesting.IssueServiceMock)
-	ms.On("Add", v).Return(v, nil)
+	ms.On("Add", i).Return(i, nil)
 	domain.GetDefaultIssueService = func(r domain.IssueRepository) domain.IssueService {
 		return ms
 	}
@@ -61,11 +61,11 @@ func TestUseCaseIssueAdd(t *testing.T) {
 
 	assert.NotNil(t, uc)
 
-	item, err := uc.Add(v.Title, v.Description, v.Status, p, l)
+	item, err := uc.Add(i.Title, i.Description, i.Status, p, l)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, i, item)
 
 	ms.AssertExpectations(t)
 	mr.AssertExpectations(t)
@@ -78,16 +78,16 @@ func TestUseCaseIssueAddErr(t *testing.T) {
 		Description: "test-description",
 	}
 	l := map[string]domain.Label{}
-	v := new(domain.Issue)
-	v.Title = "test-title"
-	v.Description = "test-description"
-	v.Status = 1
-	v.ProjectID = p.ID
-	v.Project = p
-	v.Labels = nil
+	i := new(domain.Issue)
+	i.Title = "test-title"
+	i.Description = "test-description"
+	i.Status = 1
+	i.ProjectID = p.ID
+	i.Project = p
+	i.Labels = nil
 
 	ms := new(dTesting.IssueServiceMock)
-	ms.On("Add", v).Return(new(domain.Issue), errors.New("test error"))
+	ms.On("Add", i).Return(new(domain.Issue), errors.New("test error"))
 	domain.GetDefaultIssueService = func(r domain.IssueRepository) domain.IssueService {
 		return ms
 	}
@@ -99,7 +99,7 @@ func TestUseCaseIssueAddErr(t *testing.T) {
 
 	assert.NotNil(t, uc)
 
-	item, err := uc.Add(v.Title, v.Description, v.Status, p, l)
+	item, err := uc.Add(i.Title, i.Description, i.Status, p, l)
 
 	assert.NotNil(t, err)
 	assert.Nil(t, item)
@@ -120,15 +120,15 @@ func TestUseCaseIssueUpdate(t *testing.T) {
 			Name: "test-name",
 		},
 	}
-	vf := domain.Issue{}
-	vf.Title = "test-title"
-	vf.Description = "test-description"
-	vf.Status = 1
-	vf.ProjectID = p.ID
-	vf.Project = p
-	vf.Labels = []domain.Label{}
-	vu := vf
-	vu.Labels = []domain.Label{
+	iff := domain.Issue{}
+	iff.Title = "test-title"
+	iff.Description = "test-description"
+	iff.Status = 1
+	iff.ProjectID = p.ID
+	iff.Project = p
+	iff.Labels = []domain.Label{}
+	iu := iff
+	iu.Labels = []domain.Label{
 		domain.Label{
 			ID:   1,
 			Name: "test-name",
@@ -136,8 +136,8 @@ func TestUseCaseIssueUpdate(t *testing.T) {
 	}
 
 	ms := new(dTesting.IssueServiceMock)
-	ms.On("FindByID", vf.ID).Return(vf, nil)
-	ms.On("Update", vu).Return(vu, nil)
+	ms.On("FindByID", iff.ID).Return(iff, nil)
+	ms.On("Update", iu).Return(iu, nil)
 	domain.GetDefaultIssueService = func(r domain.IssueRepository) domain.IssueService {
 		return ms
 	}
@@ -149,12 +149,12 @@ func TestUseCaseIssueUpdate(t *testing.T) {
 
 	assert.NotNil(t, uc)
 
-	item, err := uc.Update(vf.ID, vf.Title, vf.Description, vf.Status, l)
+	item, err := uc.Update(iff.ID, iff.Title, iff.Description, iff.Status, l)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.NotEqual(t, vf, item)
-	assert.Equal(t, vu, item)
+	assert.NotEqual(t, iff, item)
+	assert.Equal(t, iu, item)
 
 	ms.AssertExpectations(t)
 	mr.AssertExpectations(t)
@@ -172,15 +172,15 @@ func TestUseCaseIssueUpdateErr(t *testing.T) {
 			Name: "test-name",
 		},
 	}
-	vf := domain.Issue{}
-	vf.Title = "test-title"
-	vf.Description = "test-description"
-	vf.Status = 1
-	vf.ProjectID = p.ID
-	vf.Project = p
-	vf.Labels = []domain.Label{}
-	vu := vf
-	vu.Labels = []domain.Label{
+	iff := domain.Issue{}
+	iff.Title = "test-title"
+	iff.Description = "test-description"
+	iff.Status = 1
+	iff.ProjectID = p.ID
+	iff.Project = p
+	iff.Labels = []domain.Label{}
+	iu := iff
+	iu.Labels = []domain.Label{
 		domain.Label{
 			ID:   1,
 			Name: "test-name",
@@ -188,8 +188,8 @@ func TestUseCaseIssueUpdateErr(t *testing.T) {
 	}
 
 	ms := new(dTesting.IssueServiceMock)
-	ms.On("FindByID", vf.ID).Return(vf, nil)
-	ms.On("Update", vu).Return(vu, errors.New("test error"))
+	ms.On("FindByID", iff.ID).Return(iff, nil)
+	ms.On("Update", iu).Return(iu, errors.New("test error"))
 	domain.GetDefaultIssueService = func(r domain.IssueRepository) domain.IssueService {
 		return ms
 	}
@@ -201,12 +201,12 @@ func TestUseCaseIssueUpdateErr(t *testing.T) {
 
 	assert.NotNil(t, uc)
 
-	item, err := uc.Update(vf.ID, vf.Title, vf.Description, vf.Status, l)
+	item, err := uc.Update(iff.ID, iff.Title, iff.Description, iff.Status, l)
 
 	assert.NotNil(t, err)
 	assert.NotNil(t, item)
-	assert.NotEqual(t, vf, item)
-	assert.Equal(t, vu, item)
+	assert.NotEqual(t, iff, item)
+	assert.Equal(t, iu, item)
 
 	ms.AssertExpectations(t)
 	mr.AssertExpectations(t)
@@ -244,15 +244,15 @@ func TestUseCaseIssueUpdateFindByIDErr(t *testing.T) {
 }
 
 func TestUseCaseIssueFindByID(t *testing.T) {
-	v := domain.Issue{}
-	v.Title = "test-title"
-	v.Description = "test-description"
-	v.Status = 1
-	v.ProjectID = 1
-	v.Labels = []domain.Label{}
+	i := domain.Issue{}
+	i.Title = "test-title"
+	i.Description = "test-description"
+	i.Status = 1
+	i.ProjectID = 1
+	i.Labels = []domain.Label{}
 
 	ms := new(dTesting.IssueServiceMock)
-	ms.On("FindByID", v.ID).Return(v, nil)
+	ms.On("FindByID", i.ID).Return(i, nil)
 	domain.GetDefaultIssueService = func(r domain.IssueRepository) domain.IssueService {
 		return ms
 	}
@@ -264,26 +264,26 @@ func TestUseCaseIssueFindByID(t *testing.T) {
 
 	assert.NotNil(t, uc)
 
-	item, err := uc.FindByID(v.ID)
+	item, err := uc.FindByID(i.ID)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, i, item)
 
 	ms.AssertExpectations(t)
 	mr.AssertExpectations(t)
 }
 
 func TestUseCaseIssueFindByIDErr(t *testing.T) {
-	v := domain.Issue{}
-	v.Title = "test-title"
-	v.Description = "test-description"
-	v.Status = 1
-	v.ProjectID = 1
-	v.Labels = []domain.Label{}
+	i := domain.Issue{}
+	i.Title = "test-title"
+	i.Description = "test-description"
+	i.Status = 1
+	i.ProjectID = 1
+	i.Labels = []domain.Label{}
 
 	ms := new(dTesting.IssueServiceMock)
-	ms.On("FindByID", v.ID).Return(v, errors.New("test error"))
+	ms.On("FindByID", i.ID).Return(i, errors.New("test error"))
 	domain.GetDefaultIssueService = func(r domain.IssueRepository) domain.IssueService {
 		return ms
 	}
@@ -295,11 +295,76 @@ func TestUseCaseIssueFindByIDErr(t *testing.T) {
 
 	assert.NotNil(t, uc)
 
-	item, err := uc.FindByID(v.ID)
+	item, err := uc.FindByID(i.ID)
 
 	assert.NotNil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, i, item)
+
+	ms.AssertExpectations(t)
+	mr.AssertExpectations(t)
+}
+
+func TestUseCaseIssueFind(t *testing.T) {
+	issues := []domain.Issue{
+		domain.Issue{
+			Title:       "test-title-1",
+			Description: "test-description",
+			Status:      1,
+			ProjectID:   1,
+		},
+		domain.Issue{
+			Title:       "test-title-2",
+			Description: "test-description",
+			Status:      1,
+			ProjectID:   1,
+		},
+	}
+
+	ms := new(dTesting.IssueServiceMock)
+	ms.On("Find", "test", uint(1), []string{"test1", "test2"}).Return(issues, nil)
+	domain.GetDefaultIssueService = func(r domain.IssueRepository) domain.IssueService {
+		return ms
+	}
+	defer domain.ResetDefaultIssueService()
+
+	mr := new(dTesting.IssueRepositoryMock)
+
+	uc := usecases.NewIssueUseCase(mr)
+
+	assert.NotNil(t, uc)
+
+	items, err := uc.Find("test", uint(1), []string{"test1", "test2"})
+
+	assert.Nil(t, err)
+	assert.NotNil(t, items)
+	assert.Equal(t, issues, items)
+
+	ms.AssertExpectations(t)
+	mr.AssertExpectations(t)
+}
+
+func TestUseCaseIssueFindErr(t *testing.T) {
+	issues := []domain.Issue{}
+
+	ms := new(dTesting.IssueServiceMock)
+	ms.On("Find", "test", uint(1), []string{"test1", "test2"}).Return(issues, errors.New("test error"))
+	domain.GetDefaultIssueService = func(r domain.IssueRepository) domain.IssueService {
+		return ms
+	}
+	defer domain.ResetDefaultIssueService()
+
+	mr := new(dTesting.IssueRepositoryMock)
+
+	uc := usecases.NewIssueUseCase(mr)
+
+	assert.NotNil(t, uc)
+
+	items, err := uc.Find("test", uint(1), []string{"test1", "test2"})
+
+	assert.NotNil(t, err)
+	assert.NotNil(t, items)
+	assert.Equal(t, issues, items)
 
 	ms.AssertExpectations(t)
 	mr.AssertExpectations(t)

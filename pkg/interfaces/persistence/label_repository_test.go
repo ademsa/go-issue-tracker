@@ -28,18 +28,20 @@ func TestPersistenceLabelAdd(t *testing.T) {
 	r := persistence.NewSQLiteLabelRepository(gormDB)
 
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO \"labels\" (.+)$").WithArgs("test-name", "FFFFFF").WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("INSERT INTO \"labels\" (.+)$").WithArgs("test-name", "FFFFFF", sqlmock.AnyArg(), sqlmock.AnyArg()).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
-	p := new(domain.Label)
-	p.Name = "test-name"
-	p.ColorHexCode = "FFFFFF"
+	l := new(domain.Label)
+	l.Name = "test-name"
+	l.ColorHexCode = "FFFFFF"
 
-	item, err := r.Add(p)
+	item, err := r.Add(l)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, p, item)
+	assert.Equal(t, l.Name, item.Name)
+	assert.Equal(t, l.ColorHexCode, item.ColorHexCode)
+	assert.NotNil(t, item.CreatedAt)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("expectations were not met %s", err)
@@ -54,14 +56,14 @@ func TestPersistenceLabelAddErr(t *testing.T) {
 	r := persistence.NewSQLiteLabelRepository(gormDB)
 
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO \"labels\" (.+)$").WithArgs("test-name", "FFFFFF").WillReturnError(errors.New("test error"))
+	mock.ExpectExec("INSERT INTO \"labels\" (.+)$").WithArgs("test-name", "FFFFFF", sqlmock.AnyArg(), sqlmock.AnyArg()).WillReturnError(errors.New("test error"))
 	mock.ExpectRollback()
 
-	p := new(domain.Label)
-	p.Name = "test-name"
-	p.ColorHexCode = "FFFFFF"
+	l := new(domain.Label)
+	l.Name = "test-name"
+	l.ColorHexCode = "FFFFFF"
 
-	item, err := r.Add(p)
+	item, err := r.Add(l)
 
 	assert.NotNil(t, err)
 	assert.Nil(t, item)
@@ -79,20 +81,22 @@ func TestPersistenceLabelUpdate(t *testing.T) {
 	r := persistence.NewSQLiteLabelRepository(gormDB)
 
 	mock.ExpectBegin()
-	mock.ExpectExec("UPDATE \"labels\" SET (.+)$").WithArgs("test-name", "FFFFFF", 1).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("UPDATE \"labels\" SET (.+)$").WithArgs("test-name", "FFFFFF", sqlmock.AnyArg(), 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
-	p := domain.Label{
+	l := domain.Label{
 		ID:           uint(1),
 		Name:         "test-name",
 		ColorHexCode: "FFFFFF",
 	}
 
-	item, err := r.Update(p)
+	item, err := r.Update(l)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, p, item)
+	assert.Equal(t, l.Name, item.Name)
+	assert.Equal(t, l.ColorHexCode, item.ColorHexCode)
+	assert.NotNil(t, item.UpdatedAt)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("expectations were not met %s", err)
@@ -107,20 +111,22 @@ func TestPersistenceLabelUpdateErr(t *testing.T) {
 	r := persistence.NewSQLiteLabelRepository(gormDB)
 
 	mock.ExpectBegin()
-	mock.ExpectExec("UPDATE \"labels\" SET (.+)$").WithArgs("test-name", "FFFFFF", 1).WillReturnError(errors.New("test error"))
+	mock.ExpectExec("UPDATE \"labels\" SET (.+)$").WithArgs("test-name", "FFFFFF", sqlmock.AnyArg(), 1).WillReturnError(errors.New("test error"))
 	mock.ExpectRollback()
 
-	p := domain.Label{
+	l := domain.Label{
 		ID:           uint(1),
 		Name:         "test-name",
 		ColorHexCode: "FFFFFF",
 	}
 
-	item, err := r.Update(p)
+	item, err := r.Update(l)
 
 	assert.NotNil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, p, item)
+	assert.Equal(t, l.Name, item.Name)
+	assert.Equal(t, l.ColorHexCode, item.ColorHexCode)
+	assert.NotNil(t, item.UpdatedAt)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("expectations were not met %s", err)
@@ -213,6 +219,49 @@ func TestPersistenceLabelFindByNameErr(t *testing.T) {
 	}
 }
 
+func TestPersistenceLabelFind(t *testing.T) {
+	mockDB, mock, gormDB := pTesting.GetMockedDB(t)
+	defer mockDB.Close()
+	defer gormDB.Close()
+
+	r := persistence.NewSQLiteLabelRepository(gormDB)
+
+	labelData := sqlmock.NewRows([]string{
+		"id", "name", "color_hex_code",
+	}).AddRow("1", "test-name-1", "FFFFFF").AddRow("2", "test-name-2", "FFFFFF")
+	mock.ExpectQuery("SELECT (.+) FROM \"labels\"").WillReturnRows(labelData)
+
+	items, err := r.Find("test")
+
+	assert.Nil(t, err)
+	assert.NotNil(t, items)
+	assert.Equal(t, 2, len(items))
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("expectations were not met %s", err)
+	}
+}
+
+func TestPersistenceLabelFindErr(t *testing.T) {
+	mockDB, mock, gormDB := pTesting.GetMockedDB(t)
+	defer mockDB.Close()
+	defer gormDB.Close()
+
+	r := persistence.NewSQLiteLabelRepository(gormDB)
+
+	mock.ExpectQuery("SELECT (.+) FROM \"labels\"").WillReturnError(errors.New("test error"))
+
+	items, err := r.Find("test")
+
+	assert.NotNil(t, err)
+	assert.NotNil(t, items)
+	assert.Equal(t, 0, len(items))
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("expectations were not met %s", err)
+	}
+}
+
 func TestPersistenceLabelFindAll(t *testing.T) {
 	mockDB, mock, gormDB := pTesting.GetMockedDB(t)
 	defer mockDB.Close()
@@ -222,7 +271,7 @@ func TestPersistenceLabelFindAll(t *testing.T) {
 
 	labelData := sqlmock.NewRows([]string{
 		"id", "name", "color_hex_code",
-	}).AddRow("1", "test-name-1", "FFFFFF").AddRow("2", "test-name-2", "FF0000")
+	}).AddRow("1", "test-name-1", "FFFFFF").AddRow("2", "test-name-2", "FFFFFF")
 	mock.ExpectQuery("SELECT (.+) FROM \"labels\"").WillReturnRows(labelData)
 
 	items, err := r.FindAll()

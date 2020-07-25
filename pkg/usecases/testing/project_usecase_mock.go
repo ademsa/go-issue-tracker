@@ -28,6 +28,12 @@ func (m *ProjectUseCaseMock) FindByID(id uint) (domain.Project, error) {
 	return args.Get(0).(domain.Project), args.Error(1)
 }
 
+// Find mock
+func (m *ProjectUseCaseMock) Find(name string) ([]domain.Project, error) {
+	args := m.Called(name)
+	return args.Get(0).([]domain.Project), args.Error(1)
+}
+
 // FindAll mock
 func (m *ProjectUseCaseMock) FindAll() ([]domain.Project, error) {
 	args := m.Called()

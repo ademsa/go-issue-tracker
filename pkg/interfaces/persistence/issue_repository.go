@@ -45,6 +45,47 @@ func (r *SQLiteIssueRepository) FindByID(id uint) (domain.Issue, error) {
 	return item, nil
 }
 
+// Find to find issues
+func (r *SQLiteIssueRepository) Find(title string, projectID uint, labels []string) ([]domain.Issue, error) {
+	var items []domain.Issue
+	query := ""
+	args := []interface{}{}
+	if title != "" {
+		query = "title LIKE ?"
+		args = append(args, "%"+title+"%")
+	}
+	if projectID != uint(0) {
+		if query != "" {
+			query += " AND project_id = ?"
+		} else {
+			query += "project_id = ?"
+		}
+		args = append(args, projectID)
+	}
+	if len(labels) > 0 {
+		if query != "" {
+			query += " AND \"issues_labels\".\"label_id\" IN (?)"
+		} else {
+			query += "\"issues_labels\".\"label_id\" IN (?)"
+		}
+		args = append(args, labels)
+	}
+	if query == "" {
+		if err := r.db.Preload("Project").Preload("Labels").Find(&items).Error; err != nil {
+			return items, err
+		}
+	} else if len(labels) > 0 {
+		if err := r.db.Preload("Project").Preload("Labels").Joins("INNER JOIN \"issues_labels\" ON \"issues_labels\".\"issue_id\" = \"issues\".\"id\"").Where(query, args...).Select("DISTINCT \"issues\".*").Find(&items).Error; err != nil {
+			return items, err
+		}
+	} else {
+		if err := r.db.Preload("Project").Preload("Labels").Where(query, args...).Find(&items).Error; err != nil {
+			return items, err
+		}
+	}
+	return items, nil
+}
+
 // FindAll to find all issues
 func (r *SQLiteIssueRepository) FindAll() ([]domain.Issue, error) {
 	var items []domain.Issue

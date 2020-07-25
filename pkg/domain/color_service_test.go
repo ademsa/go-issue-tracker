@@ -30,12 +30,12 @@ func TestDomainColorGetDefaultColorService(t *testing.T) {
 }
 
 func TestDomainColorGetColor(t *testing.T) {
-	v := domain.Color{
-		HexCode: "FF0000",
+	c := domain.Color{
+		HexCode: "FFFFFF",
 	}
 
 	m := new(dTesting.ColorRepositoryMock)
-	m.On("GetColor").Return(v, nil)
+	m.On("GetColor").Return(c, nil)
 
 	s := domain.GetDefaultColorService(m)
 
@@ -43,23 +43,23 @@ func TestDomainColorGetColor(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, c, item)
 
 	m.AssertExpectations(t)
 }
 
 func TestDomainColorGetColorErr(t *testing.T) {
-	v := domain.Color{}
+	c := domain.Color{}
 
 	m := new(dTesting.ColorRepositoryMock)
-	m.On("GetColor").Return(v, errors.New("test error"))
+	m.On("GetColor").Return(c, errors.New("test error"))
 
 	s := domain.GetDefaultColorService(m)
 
 	item, err := s.GetColor()
 
 	assert.NotNil(t, err)
-	assert.Equal(t, v, item)
+	assert.Equal(t, c, item)
 
 	m.AssertExpectations(t)
 }

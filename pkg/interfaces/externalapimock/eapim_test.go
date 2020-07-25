@@ -11,7 +11,7 @@ import (
 )
 
 func TestPrepareEndpoints(t *testing.T) {
-	expectedColor := domain.Color{
+	ec := domain.Color{
 		HexCode: "2979FF",
 	}
 
@@ -23,7 +23,7 @@ func TestPrepareEndpoints(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	e.ServeHTTP(recorder, request)
 	assert.Equal(t, 200, recorder.Code)
-	var actualColor domain.Color
-	json.Unmarshal(recorder.Body.Bytes(), &actualColor)
-	assert.Equal(t, expectedColor, actualColor)
+	var ac domain.Color
+	json.Unmarshal(recorder.Body.Bytes(), &ac)
+	assert.Equal(t, ec, ac)
 }

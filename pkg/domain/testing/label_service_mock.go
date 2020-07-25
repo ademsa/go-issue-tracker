@@ -40,6 +40,12 @@ func (m *LabelServiceMock) FindByName(name string) (domain.Label, error) {
 	return args.Get(0).(domain.Label), args.Error(1)
 }
 
+// Find mock
+func (m *LabelServiceMock) Find(name string) ([]domain.Label, error) {
+	args := m.Called(name)
+	return args.Get(0).([]domain.Label), args.Error(1)
+}
+
 // FindAll mock
 func (m *LabelServiceMock) FindAll() ([]domain.Label, error) {
 	args := m.Called()

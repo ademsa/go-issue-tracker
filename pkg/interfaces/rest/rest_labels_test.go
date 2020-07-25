@@ -1,4 +1,4 @@
-package http_test
+package rest_test
 
 import (
 	"errors"
@@ -16,14 +16,14 @@ func TestAddLabel(t *testing.T) {
 		ColorHexCode: "FFFFFF",
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	lucm.On("Add", l.Name, l.ColorHexCode).Return(l, nil)
 
 	body := strings.NewReader("name=test-name&color_hex_code=FFFFFF")
 	c, rec := prepareHTTP(echo.POST, "/api/labels/new", body)
 
-	err := ruc.AddLabel(c)
+	err := m.AddLabel(c)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -32,9 +32,9 @@ func TestAddLabel(t *testing.T) {
 }
 
 func TestAddLabelValueErrs(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
-	var tests = []struct {
+	tests := []struct {
 		body *strings.Reader
 		err  error
 	}{
@@ -47,7 +47,7 @@ func TestAddLabelValueErrs(t *testing.T) {
 	for _, ts := range tests {
 		c, _ := prepareHTTP(echo.POST, "/api/labels/new", ts.body)
 
-		err := ruc.AddLabel(c)
+		err := m.AddLabel(c)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, ts.err.Error(), err.Error())
@@ -59,18 +59,18 @@ func TestAddLabelValueErrs(t *testing.T) {
 func TestAddLabelColorFromExternalApi(t *testing.T) {
 	l := &domain.Label{
 		Name:         "test-name",
-		ColorHexCode: "FF0000",
+		ColorHexCode: "FFFFFF",
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
-	cucm.On("GetColor").Return(domain.Color{HexCode: "FF0000"}, nil)
+	cucm.On("GetColor").Return(domain.Color{HexCode: "FFFFFF"}, nil)
 	lucm.On("Add", l.Name, l.ColorHexCode).Return(l, nil)
 
 	body := strings.NewReader("name=test-name&color_hex_code=")
 	c, rec := prepareHTTP(echo.POST, "/api/labels/new", body)
 
-	err := ruc.AddLabel(c)
+	err := m.AddLabel(c)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -79,14 +79,14 @@ func TestAddLabelColorFromExternalApi(t *testing.T) {
 }
 
 func TestAddLabelColorErr(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	cucm.On("GetColor").Return(domain.Color{}, errors.New("test error"))
 
 	body := strings.NewReader("name=test-name&color_hex_code=")
 	c, _ := prepareHTTP(echo.POST, "/api/labels/new", body)
 
-	err := ruc.AddLabel(c)
+	err := m.AddLabel(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "test error", err.Error())
@@ -100,14 +100,14 @@ func TestAddLabelErr(t *testing.T) {
 		ColorHexCode: "FFFFFF",
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	lucm.On("Add", p.Name, p.ColorHexCode).Return(p, errors.New("test error"))
 
 	body := strings.NewReader("name=test-name&color_hex_code=FFFFFF")
 	c, _ := prepareHTTP(echo.POST, "/api/labels/new", body)
 
-	err := ruc.AddLabel(c)
+	err := m.AddLabel(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "test error", err.Error())
@@ -116,22 +116,22 @@ func TestAddLabelErr(t *testing.T) {
 }
 
 func TestUpdateLabel(t *testing.T) {
-	p := domain.Label{
+	l := domain.Label{
 		ID:           1,
 		Name:         "test-name",
 		ColorHexCode: "FFFFFF",
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
-	lucm.On("Update", p.ID, p.Name, p.ColorHexCode).Return(p, nil)
+	lucm.On("Update", l.ID, l.Name, l.ColorHexCode).Return(l, nil)
 
 	body := strings.NewReader("name=test-name&color_hex_code=FFFFFF")
 	c, rec := prepareHTTP(echo.POST, "/api/labels/:id", body)
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.UpdateLabel(c)
+	err := m.UpdateLabel(c)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -140,14 +140,14 @@ func TestUpdateLabel(t *testing.T) {
 }
 
 func TestUpdateLabelIDErr(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	body := strings.NewReader("name=test-name&color_hex_code=FFFFFF")
 	c, _ := prepareHTTP(echo.POST, "/api/labels/:id", body)
 	c.SetParamNames("id")
 	c.SetParamValues("test")
 
-	err := ruc.UpdateLabel(c)
+	err := m.UpdateLabel(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, fmt.Errorf("strconv.Atoi: parsing \"%s\": invalid syntax", "test").Error(), err.Error())
@@ -156,9 +156,9 @@ func TestUpdateLabelIDErr(t *testing.T) {
 }
 
 func TestUpdateLabelValueErrs(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
-	var tests = []struct {
+	tests := []struct {
 		body *strings.Reader
 		err  error
 	}{
@@ -173,7 +173,7 @@ func TestUpdateLabelValueErrs(t *testing.T) {
 		c.SetParamNames("id")
 		c.SetParamValues("1")
 
-		err := ruc.UpdateLabel(c)
+		err := m.UpdateLabel(c)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, ts.err.Error(), err.Error())
@@ -186,12 +186,12 @@ func TestUpdateLabelColorFromExternalApi(t *testing.T) {
 	l := domain.Label{
 		ID:           1,
 		Name:         "test-name",
-		ColorHexCode: "FF0000",
+		ColorHexCode: "FFFFFF",
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
-	cucm.On("GetColor").Return(domain.Color{HexCode: "FF0000"}, nil)
+	cucm.On("GetColor").Return(domain.Color{HexCode: "FFFFFF"}, nil)
 	lucm.On("Update", l.ID, l.Name, l.ColorHexCode).Return(l, nil)
 
 	body := strings.NewReader("name=test-name&color_hex_code=")
@@ -199,7 +199,7 @@ func TestUpdateLabelColorFromExternalApi(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.UpdateLabel(c)
+	err := m.UpdateLabel(c)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -208,7 +208,7 @@ func TestUpdateLabelColorFromExternalApi(t *testing.T) {
 }
 
 func TestUpdateLabelColorErr(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	cucm.On("GetColor").Return(domain.Color{}, errors.New("test error"))
 
@@ -217,7 +217,7 @@ func TestUpdateLabelColorErr(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.UpdateLabel(c)
+	err := m.UpdateLabel(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "test error", err.Error())
@@ -226,22 +226,22 @@ func TestUpdateLabelColorErr(t *testing.T) {
 }
 
 func TestUpdateLabelErr(t *testing.T) {
-	p := domain.Label{
+	l := domain.Label{
 		ID:           1,
 		Name:         "test-name",
 		ColorHexCode: "FFFFFF",
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
-	lucm.On("Update", p.ID, p.Name, p.ColorHexCode).Return(p, errors.New("test error"))
+	lucm.On("Update", l.ID, l.Name, l.ColorHexCode).Return(l, errors.New("test error"))
 
 	body := strings.NewReader("name=test-name&color_hex_code=FFFFFF")
 	c, _ := prepareHTTP(echo.POST, "/api/labels/:id", body)
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.UpdateLabel(c)
+	err := m.UpdateLabel(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "test error", err.Error())
@@ -273,13 +273,13 @@ func TestFindLabelByID(t *testing.T) {
 }
 
 func TestFindLabelByIDIDErr(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	c, _ := prepareHTTP(echo.GET, "/api/labels/:id", nil)
 	c.SetParamNames("id")
 	c.SetParamValues("test")
 
-	err := ruc.FindLabelByID(c)
+	err := m.FindLabelByID(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, fmt.Errorf("strconv.Atoi: parsing \"%s\": invalid syntax", "test").Error(), err.Error())
@@ -294,7 +294,7 @@ func TestFindLabelByIDNotFoundNoErr(t *testing.T) {
 		ColorHexCode: "FFFFFF",
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	lucm.On("FindByID", l.ID).Return(l, errors.New("record not found"))
 
@@ -302,7 +302,7 @@ func TestFindLabelByIDNotFoundNoErr(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.FindLabelByID(c)
+	err := m.FindLabelByID(c)
 
 	assert.Nil(t, err)
 
@@ -316,7 +316,7 @@ func TestFindLabelByIDOtherErr(t *testing.T) {
 		ColorHexCode: "FFFFFF",
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	lucm.On("FindByID", l.ID).Return(l, errors.New("test error"))
 
@@ -324,7 +324,7 @@ func TestFindLabelByIDOtherErr(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.FindLabelByID(c)
+	err := m.FindLabelByID(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "test error", err.Error())
@@ -332,22 +332,27 @@ func TestFindLabelByIDOtherErr(t *testing.T) {
 	checkAssertions(t, cucm, iucm, lucm, pucm)
 }
 
-func TestFindLabelByName(t *testing.T) {
-	l := domain.Label{
-		ID:           1,
-		Name:         "test-name",
-		ColorHexCode: "FFFFFF",
+func TestFindLabels(t *testing.T) {
+	l := []domain.Label{
+		domain.Label{
+			ID:           1,
+			Name:         "test-name-1",
+			ColorHexCode: "FFFFFF",
+		},
+		domain.Label{
+			ID:           2,
+			Name:         "test-name-2",
+			ColorHexCode: "FFFFFF",
+		},
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
-	lucm.On("FindByName", l.Name).Return(l, nil)
+	lucm.On("Find", "test").Return(l, nil)
 
-	c, rec := prepareHTTP(echo.GET, "/api/labels/findbyname/:name", nil)
-	c.SetParamNames("name")
-	c.SetParamValues(l.Name)
+	c, rec := prepareHTTP(echo.GET, "/api/labels/find?name=test", nil)
 
-	err := ruc.FindLabelByName(c)
+	err := m.FindLabels(c)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -355,59 +360,16 @@ func TestFindLabelByName(t *testing.T) {
 	checkAssertions(t, cucm, iucm, lucm, pucm)
 }
 
-func TestFindLabelByNameNameErr(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+func TestFindLabelsOtherErr(t *testing.T) {
+	l := []domain.Label{}
 
-	c, _ := prepareHTTP(echo.GET, "/api/labels/findbyname/:name", nil)
-	c.SetParamNames("name")
-	c.SetParamValues("")
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
-	err := ruc.FindLabelByName(c)
+	lucm.On("Find", "test").Return(l, errors.New("test error"))
 
-	assert.NotNil(t, err)
-	assert.Equal(t, "label name not provided", err.Error())
+	c, _ := prepareHTTP(echo.GET, "/api/labels/find?name=test", nil)
 
-	checkAssertions(t, cucm, iucm, lucm, pucm)
-}
-
-func TestFindLabelByNameNotFoundNoErr(t *testing.T) {
-	l := domain.Label{
-		ID:           1,
-		Name:         "test-name",
-		ColorHexCode: "FFFFFF",
-	}
-
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
-
-	lucm.On("FindByName", l.Name).Return(l, errors.New("record not found"))
-
-	c, _ := prepareHTTP(echo.GET, "/api/labels/findbyname/:name", nil)
-	c.SetParamNames("name")
-	c.SetParamValues(l.Name)
-
-	err := ruc.FindLabelByName(c)
-
-	assert.Nil(t, err)
-
-	checkAssertions(t, cucm, iucm, lucm, pucm)
-}
-
-func TestFindLabelByNameOtherErr(t *testing.T) {
-	l := domain.Label{
-		ID:           1,
-		Name:         "test-name",
-		ColorHexCode: "FFFFFF",
-	}
-
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
-
-	lucm.On("FindByName", l.Name).Return(l, errors.New("test error"))
-
-	c, _ := prepareHTTP(echo.GET, "/api/labels/findbyname/:name", nil)
-	c.SetParamNames("name")
-	c.SetParamValues(l.Name)
-
-	err := ruc.FindLabelByName(c)
+	err := m.FindLabels(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "test error", err.Error())
@@ -418,13 +380,13 @@ func TestFindLabelByNameOtherErr(t *testing.T) {
 func TestFindAllLabels(t *testing.T) {
 	l := []domain.Label{}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	lucm.On("FindAll").Return(l, nil)
 
 	c, rec := prepareHTTP(echo.GET, "/api/labels", nil)
 
-	err := ruc.FindAllLabels(c)
+	err := m.FindAllLabels(c)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -435,13 +397,13 @@ func TestFindAllLabels(t *testing.T) {
 func TestFindAllLabelsErr(t *testing.T) {
 	l := []domain.Label{}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	lucm.On("FindAll").Return(l, errors.New("test error"))
 
 	c, _ := prepareHTTP(echo.GET, "/api/labels", nil)
 
-	err := ruc.FindAllLabels(c)
+	err := m.FindAllLabels(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "test error", err.Error())
@@ -450,7 +412,7 @@ func TestFindAllLabelsErr(t *testing.T) {
 }
 
 func TestRemoveLabel(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	lucm.On("Remove", uint(1)).Return(true, nil)
 
@@ -458,7 +420,7 @@ func TestRemoveLabel(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.RemoveLabel(c)
+	err := m.RemoveLabel(c)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -467,7 +429,7 @@ func TestRemoveLabel(t *testing.T) {
 }
 
 func TestRemoveLabelNotFoundNoErr(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	lucm.On("Remove", uint(1)).Return(false, errors.New("record not found"))
 
@@ -475,7 +437,7 @@ func TestRemoveLabelNotFoundNoErr(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.RemoveLabel(c)
+	err := m.RemoveLabel(c)
 
 	assert.Nil(t, err)
 
@@ -483,7 +445,7 @@ func TestRemoveLabelNotFoundNoErr(t *testing.T) {
 }
 
 func TestRemoveLabelErr(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	lucm.On("Remove", uint(1)).Return(false, errors.New("test error"))
 
@@ -491,7 +453,7 @@ func TestRemoveLabelErr(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.RemoveLabel(c)
+	err := m.RemoveLabel(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "test error", err.Error())
@@ -500,13 +462,13 @@ func TestRemoveLabelErr(t *testing.T) {
 }
 
 func TestRemoveLabelIDErr(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	c, _ := prepareHTTP(echo.DELETE, "/api/labels/:id", nil)
 	c.SetParamNames("id")
 	c.SetParamValues("test")
 
-	err := ruc.RemoveLabel(c)
+	err := m.RemoveLabel(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, fmt.Errorf("strconv.Atoi: parsing \"%s\": invalid syntax", "test").Error(), err.Error())

@@ -9,6 +9,7 @@ type IssueService interface {
 	Add(issue *Issue) (*Issue, error)
 	Update(issue Issue) (Issue, error)
 	FindByID(id uint) (Issue, error)
+	Find(title string, projectID uint, labels []string) ([]Issue, error)
 	FindAll() ([]Issue, error)
 	Remove(id uint) (bool, error)
 }
@@ -74,6 +75,15 @@ func (s *issueService) FindByID(id uint) (Issue, error) {
 		return item, err
 	}
 	return item, nil
+}
+
+// Find to find issues
+func (s *issueService) Find(title string, projectID uint, labels []string) ([]Issue, error) {
+	items, err := s.repository.Find(title, projectID, labels)
+	if err != nil {
+		return items, err
+	}
+	return items, nil
 }
 
 // FindAll to find all issues

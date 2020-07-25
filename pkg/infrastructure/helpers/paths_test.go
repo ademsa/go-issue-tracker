@@ -28,3 +28,15 @@ func TestGetProjectDirPathErr(t *testing.T) {
 	assert.Equal(t, "", path)
 	assert.NotNil(t, err)
 }
+
+func TestPathExistsDoesNotExist(t *testing.T) {
+	status := helpers.PathExists("/var/unknowndir")
+
+	assert.False(t, status)
+}
+
+func TestPathExistsExists(t *testing.T) {
+	status := helpers.PathExists("/var")
+
+	assert.True(t, status)
+}

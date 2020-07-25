@@ -51,6 +51,15 @@ func (r *SQLiteLabelRepository) FindByName(name string) (domain.Label, error) {
 	return item, nil
 }
 
+// Find to find labels
+func (r *SQLiteLabelRepository) Find(name string) ([]domain.Label, error) {
+	var items []domain.Label
+	if err := r.db.Where("name LIKE ?", "%"+name+"%").Find(&items).Error; err != nil {
+		return items, err
+	}
+	return items, nil
+}
+
 // FindAll to find all labels
 func (r *SQLiteLabelRepository) FindAll() ([]domain.Label, error) {
 	var items []domain.Label

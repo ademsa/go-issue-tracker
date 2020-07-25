@@ -9,6 +9,7 @@ type IssueUseCase interface {
 	Add(title string, description string, status int, project domain.Project, labels map[string]domain.Label) (*domain.Issue, error)
 	Update(id uint, title string, description string, status int, labels map[string]domain.Label) (domain.Issue, error)
 	FindByID(id uint) (domain.Issue, error)
+	Find(title string, projectID uint, labels []string) ([]domain.Issue, error)
 	FindAll() ([]domain.Issue, error)
 	Remove(id uint) (bool, error)
 }
@@ -27,7 +28,7 @@ func NewIssueUseCase(repository domain.IssueRepository) IssueUseCase {
 
 // Add to add new issue
 func (uc *issueUseCase) Add(title string, description string, status int, project domain.Project, labels map[string]domain.Label) (*domain.Issue, error) {
-	var item = new(domain.Issue)
+	item := new(domain.Issue)
 	item.Title = title
 	item.Description = description
 	item.Status = status
@@ -75,6 +76,15 @@ func (uc *issueUseCase) FindByID(id uint) (domain.Issue, error) {
 		return item, err
 	}
 	return item, nil
+}
+
+// Find to find issues
+func (uc *issueUseCase) Find(title string, projectID uint, labels []string) ([]domain.Issue, error) {
+	items, err := uc.service.Find(title, projectID, labels)
+	if err != nil {
+		return items, err
+	}
+	return items, nil
 }
 
 // FindAll to find all issues

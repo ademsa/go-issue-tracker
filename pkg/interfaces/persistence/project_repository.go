@@ -42,6 +42,15 @@ func (r *SQLiteProjectRepository) FindByID(id uint) (domain.Project, error) {
 	return item, nil
 }
 
+// Find to find projects
+func (r *SQLiteProjectRepository) Find(name string) ([]domain.Project, error) {
+	var items []domain.Project
+	if err := r.db.Where("name LIKE ?", "%"+name+"%").Find(&items).Error; err != nil {
+		return items, err
+	}
+	return items, nil
+}
+
 // FindAll to find all projects
 func (r *SQLiteProjectRepository) FindAll() ([]domain.Project, error) {
 	var items []domain.Project

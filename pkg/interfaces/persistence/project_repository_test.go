@@ -28,7 +28,7 @@ func TestPersistenceProjectAdd(t *testing.T) {
 	r := persistence.NewSQLiteProjectRepository(gormDB)
 
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO \"projects\" (.+)$").WithArgs("test-name", "test-description").WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("INSERT INTO \"projects\" (.+)$").WithArgs("test-name", "test-description", sqlmock.AnyArg(), sqlmock.AnyArg()).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
 	p := new(domain.Project)
@@ -39,7 +39,9 @@ func TestPersistenceProjectAdd(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, p, item)
+	assert.Equal(t, p.Name, item.Name)
+	assert.Equal(t, p.Description, item.Description)
+	assert.NotNil(t, item.CreatedAt)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("expectations were not met %s", err)
@@ -54,7 +56,7 @@ func TestPersistenceProjectAddErr(t *testing.T) {
 	r := persistence.NewSQLiteProjectRepository(gormDB)
 
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO \"projects\" (.+)$").WithArgs("test-name", "test-description").WillReturnError(errors.New("test error"))
+	mock.ExpectExec("INSERT INTO \"projects\" (.+)$").WithArgs("test-name", "test-description", sqlmock.AnyArg(), sqlmock.AnyArg()).WillReturnError(errors.New("test error"))
 	mock.ExpectRollback()
 
 	p := new(domain.Project)
@@ -79,7 +81,7 @@ func TestPersistenceProjectUpdate(t *testing.T) {
 	r := persistence.NewSQLiteProjectRepository(gormDB)
 
 	mock.ExpectBegin()
-	mock.ExpectExec("UPDATE \"projects\" SET (.+)$").WithArgs("test-name", "test-description", 1).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("UPDATE \"projects\" SET (.+)$").WithArgs("test-name", "test-description", sqlmock.AnyArg(), 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
 	p := domain.Project{
@@ -92,7 +94,9 @@ func TestPersistenceProjectUpdate(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, p, item)
+	assert.Equal(t, p.Name, item.Name)
+	assert.Equal(t, p.Description, item.Description)
+	assert.NotNil(t, item.UpdatedAt)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("expectations were not met %s", err)
@@ -107,7 +111,7 @@ func TestPersistenceProjectUpdateErr(t *testing.T) {
 	r := persistence.NewSQLiteProjectRepository(gormDB)
 
 	mock.ExpectBegin()
-	mock.ExpectExec("UPDATE \"projects\" SET (.+)$").WithArgs("test-name", "test-description", 1).WillReturnError(errors.New("test error"))
+	mock.ExpectExec("UPDATE \"projects\" SET (.+)$").WithArgs("test-name", "test-description", sqlmock.AnyArg(), 1).WillReturnError(errors.New("test error"))
 	mock.ExpectRollback()
 
 	p := domain.Project{
@@ -120,7 +124,9 @@ func TestPersistenceProjectUpdateErr(t *testing.T) {
 
 	assert.NotNil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, p, item)
+	assert.Equal(t, p.Name, item.Name)
+	assert.Equal(t, p.Description, item.Description)
+	assert.NotNil(t, item.UpdatedAt)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("expectations were not met %s", err)
@@ -164,6 +170,49 @@ func TestPersistenceProjectFindByIDErr(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.NotNil(t, item)
 	assert.Equal(t, uint(0), item.ID)
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("expectations were not met %s", err)
+	}
+}
+
+func TestPersistenceProjectFind(t *testing.T) {
+	mockDB, mock, gormDB := pTesting.GetMockedDB(t)
+	defer mockDB.Close()
+	defer gormDB.Close()
+
+	r := persistence.NewSQLiteProjectRepository(gormDB)
+
+	projectData := sqlmock.NewRows([]string{
+		"id", "name", "description",
+	}).AddRow("1", "test-name-1", "test-description").AddRow("2", "test-name-2", "test-description")
+	mock.ExpectQuery("SELECT (.+) FROM \"projects\"").WillReturnRows(projectData)
+
+	items, err := r.Find("test")
+
+	assert.Nil(t, err)
+	assert.NotNil(t, items)
+	assert.Equal(t, 2, len(items))
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("expectations were not met %s", err)
+	}
+}
+
+func TestPersistenceProjectFindErr(t *testing.T) {
+	mockDB, mock, gormDB := pTesting.GetMockedDB(t)
+	defer mockDB.Close()
+	defer gormDB.Close()
+
+	r := persistence.NewSQLiteProjectRepository(gormDB)
+
+	mock.ExpectQuery("SELECT (.+) FROM \"projects\"").WillReturnError(errors.New("test error"))
+
+	items, err := r.Find("test")
+
+	assert.NotNil(t, err)
+	assert.NotNil(t, items)
+	assert.Equal(t, 0, len(items))
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("expectations were not met %s", err)

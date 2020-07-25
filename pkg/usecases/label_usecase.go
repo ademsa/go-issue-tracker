@@ -10,6 +10,7 @@ type LabelUseCase interface {
 	Update(id uint, name string, colorHexCode string) (domain.Label, error)
 	FindByID(id uint) (domain.Label, error)
 	FindByName(name string) (domain.Label, error)
+	Find(name string) ([]domain.Label, error)
 	FindAll() ([]domain.Label, error)
 	Remove(id uint) (bool, error)
 }
@@ -28,7 +29,7 @@ func NewLabelUseCase(repository domain.LabelRepository) LabelUseCase {
 
 // Add to add new label
 func (uc *labelUseCase) Add(name string, colorHexCode string) (*domain.Label, error) {
-	var item = new(domain.Label)
+	item := new(domain.Label)
 	item.Name = name
 	item.ColorHexCode = colorHexCode
 	itemAdded, err := uc.service.Add(item)
@@ -70,6 +71,15 @@ func (uc *labelUseCase) FindByName(name string) (domain.Label, error) {
 		return item, err
 	}
 	return item, nil
+}
+
+// Find to find label by name
+func (uc *labelUseCase) Find(name string) ([]domain.Label, error) {
+	items, err := uc.service.Find(name)
+	if err != nil {
+		return items, err
+	}
+	return items, nil
 }
 
 // FindAll to find all labels
