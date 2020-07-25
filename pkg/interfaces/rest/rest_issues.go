@@ -1,4 +1,4 @@
-package http
+package rest
 
 import (
 	"errors"
@@ -10,12 +10,12 @@ import (
 )
 
 // getLabels to get/validate labels from echo.Context
-func (ruc *restUseCase) getLabels(c echo.Context) (map[string]domain.Label, error) {
+func (m *manager) getLabels(c echo.Context) (map[string]domain.Label, error) {
 	labelsRaw := strings.Split(strings.Trim(c.FormValue("labels"), " "), ",")
 	labels := make(map[string]domain.Label)
 	for _, lR := range labelsRaw {
 		if labels[lR].ID == 0 && lR != "" {
-			label, err := ruc.luc.FindByName(lR)
+			label, err := m.luc.FindByName(lR)
 			if err != nil {
 				return labels, fmt.Errorf("label %s is not valid", lR)
 			}
@@ -30,7 +30,7 @@ func (ruc *restUseCase) getLabels(c echo.Context) (map[string]domain.Label, erro
 }
 
 // AddIssue to add new issue
-func (ruc *restUseCase) AddIssue(c echo.Context) error {
+func (m *manager) AddIssue(c echo.Context) error {
 	title := c.FormValue("title")
 	if title == "" {
 		return errors.New("title not provided")
@@ -43,20 +43,20 @@ func (ruc *restUseCase) AddIssue(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	projectID, err := strconv.Atoi(c.FormValue("project_id"))
+	projectID, err := strconv.Atoi(c.FormValue("projectId"))
 	if err != nil {
 		return err
 	}
-	project, err := ruc.puc.FindByID(uint(projectID))
+	project, err := m.puc.FindByID(uint(projectID))
 	if err != nil {
 		return errors.New("project not found")
 	}
-	labels, err := ruc.getLabels(c)
+	labels, err := m.getLabels(c)
 	if err != nil {
 		return err
 	}
 
-	item, err := ruc.iuc.Add(title, description, status, project, labels)
+	item, err := m.iuc.Add(title, description, status, project, labels)
 	if err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func (ruc *restUseCase) AddIssue(c echo.Context) error {
 }
 
 // UpdateIssue to update issue
-func (ruc *restUseCase) UpdateIssue(c echo.Context) error {
+func (m *manager) UpdateIssue(c echo.Context) error {
 	id, err := getID(c)
 	if err != nil {
 		return err
@@ -85,12 +85,12 @@ func (ruc *restUseCase) UpdateIssue(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	labels, err := ruc.getLabels(c)
+	labels, err := m.getLabels(c)
 	if err != nil {
 		return err
 	}
 
-	item, err := ruc.iuc.Update(id, title, description, status, labels)
+	item, err := m.iuc.Update(id, title, description, status, labels)
 	if err != nil {
 		return err
 	}
@@ -101,13 +101,13 @@ func (ruc *restUseCase) UpdateIssue(c echo.Context) error {
 }
 
 // FindIssueByID to find issue by ID
-func (ruc *restUseCase) FindIssueByID(c echo.Context) error {
+func (m *manager) FindIssueByID(c echo.Context) error {
 	id, err := getID(c)
 	if err != nil {
 		return err
 	}
 
-	item, err := ruc.iuc.FindByID(id)
+	item, err := m.iuc.FindByID(id)
 	if err != nil {
 		if err.Error() == "record not found" {
 			return c.JSON(200, map[string]interface{}{
@@ -122,9 +122,34 @@ func (ruc *restUseCase) FindIssueByID(c echo.Context) error {
 	})
 }
 
+// FindIssues to find issues
+func (m *manager) FindIssues(c echo.Context) error {
+	title := c.QueryParam("title")
+	projectID, err := strconv.Atoi(c.QueryParam("projectId"))
+	if err != nil {
+		return err
+	}
+	labelsRaw := strings.Split(strings.Trim(c.QueryParam("labels"), " "), ",")
+	labels := []string{}
+	for _, lR := range labelsRaw {
+		if lR != "" {
+			labels = append(labels, lR)
+		}
+	}
+
+	items, err := m.iuc.Find(title, uint(projectID), labels)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, map[string]interface{}{
+		"items": items,
+	})
+}
+
 // FindAllIssues to find all issues
-func (ruc *restUseCase) FindAllIssues(c echo.Context) error {
-	items, err := ruc.iuc.FindAll()
+func (m *manager) FindAllIssues(c echo.Context) error {
+	items, err := m.iuc.FindAll()
 	if err != nil {
 		return err
 	}
@@ -135,13 +160,13 @@ func (ruc *restUseCase) FindAllIssues(c echo.Context) error {
 }
 
 // RemoveIssue to remove issue
-func (ruc *restUseCase) RemoveIssue(c echo.Context) error {
+func (m *manager) RemoveIssue(c echo.Context) error {
 	id, err := getID(c)
 	if err != nil {
 		return err
 	}
 
-	status, err := ruc.iuc.Remove(id)
+	status, err := m.iuc.Remove(id)
 	if err != nil {
 		if err.Error() == "record not found" {
 			return c.JSON(200, map[string]interface{}{
@@ -152,6 +177,6 @@ func (ruc *restUseCase) RemoveIssue(c echo.Context) error {
 	}
 
 	return c.JSON(200, map[string]interface{}{
-		"item": status,
+		"status": status,
 	})
 }

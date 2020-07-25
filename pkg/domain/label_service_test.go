@@ -31,27 +31,27 @@ func TestDomainLabelGetDefaultLabelService(t *testing.T) {
 }
 
 func TestDomainLabelAdd(t *testing.T) {
-	v := new(domain.Label)
-	v.Name = "test-name"
-	v.ColorHexCode = "FFFFFF"
+	l := new(domain.Label)
+	l.Name = "test-name"
+	l.ColorHexCode = "FFFFFF"
 
 	m := new(dTesting.LabelRepositoryMock)
-	m.On("Add", v).Return(v, nil)
-	m.On("FindByName", v.Name).Return(*v, nil)
+	m.On("Add", l).Return(l, nil)
+	m.On("FindByName", l.Name).Return(*l, nil)
 
 	s := domain.GetDefaultLabelService(m)
 
-	item, err := s.Add(v)
+	item, err := s.Add(l)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, l, item)
 
 	m.AssertExpectations(t)
 }
 
 func TestDomainLabelAddAlreadyExists(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		v   *domain.Label
 		err error
 	}{
@@ -88,15 +88,15 @@ func TestDomainLabelAddAlreadyExists(t *testing.T) {
 }
 
 func TestDomainLabelAddErr(t *testing.T) {
-	v := new(domain.Label)
+	l := new(domain.Label)
 
 	m := new(dTesting.LabelRepositoryMock)
-	m.On("Add", v).Return(v, errors.New("test error"))
-	m.On("FindByName", v.Name).Return(*v, nil)
+	m.On("Add", l).Return(l, errors.New("test error"))
+	m.On("FindByName", l.Name).Return(*l, nil)
 
 	s := domain.GetDefaultLabelService(m)
 
-	item, err := s.Add(v)
+	item, err := s.Add(l)
 
 	assert.NotNil(t, err)
 	assert.Nil(t, item)
@@ -105,112 +105,145 @@ func TestDomainLabelAddErr(t *testing.T) {
 }
 
 func TestDomainLabelUpdate(t *testing.T) {
-	v := domain.Label{
+	l := domain.Label{
 		ID:           1,
 		Name:         "test-name",
 		ColorHexCode: "FFFFFF",
 	}
 
 	m := new(dTesting.LabelRepositoryMock)
-	m.On("Update", v).Return(v, nil)
+	m.On("Update", l).Return(l, nil)
 
 	s := domain.GetDefaultLabelService(m)
 
-	item, err := s.Update(v)
+	item, err := s.Update(l)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, l, item)
 
 	m.AssertExpectations(t)
 }
 
 func TestDomainLabelUpdateErr(t *testing.T) {
-	v := domain.Label{}
+	l := domain.Label{}
 
 	m := new(dTesting.LabelRepositoryMock)
-	m.On("Update", v).Return(v, errors.New("test error"))
+	m.On("Update", l).Return(l, errors.New("test error"))
 
 	s := domain.GetDefaultLabelService(m)
 
-	item, err := s.Update(v)
+	item, err := s.Update(l)
 
 	assert.NotNil(t, err)
-	assert.Equal(t, v, item)
+	assert.Equal(t, l, item)
 
 	m.AssertExpectations(t)
 }
 
 func TestDomainLabelFindByID(t *testing.T) {
-	v := domain.Label{
+	l := domain.Label{
 		ID:           1,
 		Name:         "test-name",
 		ColorHexCode: "FFFFFF",
 	}
 
 	m := new(dTesting.LabelRepositoryMock)
-	m.On("FindByID", v.ID).Return(v, nil)
+	m.On("FindByID", l.ID).Return(l, nil)
 
 	s := domain.GetDefaultLabelService(m)
 
-	item, err := s.FindByID(v.ID)
+	item, err := s.FindByID(l.ID)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, l, item)
 
 	m.AssertExpectations(t)
 }
 
 func TestDomainLabelFindByIDErr(t *testing.T) {
-	v := domain.Label{}
+	l := domain.Label{}
 
 	m := new(dTesting.LabelRepositoryMock)
-	m.On("FindByID", uint(1)).Return(v, errors.New("test error"))
+	m.On("FindByID", uint(1)).Return(l, errors.New("test error"))
 
 	s := domain.GetDefaultLabelService(m)
 
 	item, err := s.FindByID(uint(1))
 
 	assert.NotNil(t, err)
-	assert.Equal(t, v, item)
+	assert.Equal(t, l, item)
 
 	m.AssertExpectations(t)
 }
 
 func TestDomainLabelFindByName(t *testing.T) {
-	v := domain.Label{
+	l := domain.Label{
 		ID:           1,
 		Name:         "test-name",
 		ColorHexCode: "FFFFFF",
 	}
 
 	m := new(dTesting.LabelRepositoryMock)
-	m.On("FindByName", v.Name).Return(v, nil)
+	m.On("FindByName", l.Name).Return(l, nil)
 
 	s := domain.GetDefaultLabelService(m)
 
-	item, err := s.FindByName(v.Name)
+	item, err := s.FindByName(l.Name)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, l, item)
 
 	m.AssertExpectations(t)
 }
 
 func TestDomainLabelFindByNameErr(t *testing.T) {
-	v := domain.Label{}
+	l := domain.Label{}
 
 	m := new(dTesting.LabelRepositoryMock)
-	m.On("FindByName", "test-name").Return(v, errors.New("test error"))
+	m.On("FindByName", "test-name").Return(l, errors.New("test error"))
 
 	s := domain.GetDefaultLabelService(m)
 
 	item, err := s.FindByName("test-name")
 
 	assert.NotNil(t, err)
-	assert.Equal(t, v, item)
+	assert.Equal(t, l, item)
+
+	m.AssertExpectations(t)
+}
+
+func TestDomainLabelFind(t *testing.T) {
+	v := []domain.Label{}
+
+	m := new(dTesting.LabelRepositoryMock)
+	m.On("Find", "test").Return(v, nil)
+
+	s := domain.GetDefaultLabelService(m)
+
+	items, err := s.Find("test")
+
+	assert.Nil(t, err)
+	assert.NotNil(t, items)
+	assert.Equal(t, v, items)
+
+	m.AssertExpectations(t)
+}
+
+func TestDomainLabelFindErr(t *testing.T) {
+	v := []domain.Label{}
+
+	m := new(dTesting.LabelRepositoryMock)
+	m.On("Find", "test").Return(v, errors.New("test error"))
+
+	s := domain.GetDefaultLabelService(m)
+
+	items, err := s.Find("test")
+
+	assert.NotNil(t, err)
+	assert.Equal(t, v, items)
 
 	m.AssertExpectations(t)
 }

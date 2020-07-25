@@ -1,7 +1,7 @@
 default: build
 
 clean:
-	rm -r ./bin && mkdir ./bin && rm ./coverage.*
+	rm -r ./bin && mkdir ./bin
 
 prepare-dependencies:
 	go mod download

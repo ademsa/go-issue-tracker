@@ -10,3 +10,4 @@ bin/
 data/*.sqlite3
 coverage.out
 coverage.html
+ui

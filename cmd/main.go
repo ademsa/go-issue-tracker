@@ -2,29 +2,32 @@ package main
 
 import (
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	infraPersistence "go-issue-tracker/pkg/infrastructure/persistence"
+	"go-issue-tracker/pkg/infrastructure/database"
+	"go-issue-tracker/pkg/infrastructure/helpers"
 	"go-issue-tracker/pkg/interfaces/externalapi"
 	"go-issue-tracker/pkg/interfaces/externalapimock"
-	"go-issue-tracker/pkg/interfaces/http"
+	"go-issue-tracker/pkg/interfaces/gql"
 	"go-issue-tracker/pkg/interfaces/persistence"
+	"go-issue-tracker/pkg/interfaces/rest"
 	"go-issue-tracker/pkg/usecases"
 	"log"
-	netHttp "net/http"
+	"net/http"
+	"path/filepath"
 	"time"
 )
 
-// EndpointsBaseAddress is base path
-var EndpointsBaseAddress = "127.0.0.1:8000"
+// EndpointBaseAddress is base path
+var EndpointBaseAddress = "127.0.0.1:8000"
 
 func main() {
 	// Get db path
-	dbPath, err := infraPersistence.GetDefaultSQLiteDBFilePath()
+	dbPath, err := database.GetDefaultSQLiteDBFilePath()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Connecting to SQLite database
-	db, err := infraPersistence.GetSQLiteDB(dbPath)
+	db, err := database.GetSQLiteDB(dbPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -36,12 +39,12 @@ func main() {
 	pr := persistence.NewSQLiteProjectRepository(db)
 
 	// HTTP Client for making calls to color repository
-	httpClient := &netHttp.Client{
+	httpClient := &http.Client{
 		Timeout: 30 * time.Second,
 	}
 
 	// External API repository
-	cr := externalapi.NewColorRepository("http://"+EndpointsBaseAddress+externalapimock.ExternalAPIMockPath, httpClient)
+	cr := externalapi.NewColorRepository("http://"+EndpointBaseAddress+externalapimock.ExternalAPIMockPath, httpClient)
 
 	// Use Cases
 	iuc := usecases.NewIssueUseCase(ir)
@@ -49,13 +52,26 @@ func main() {
 	puc := usecases.NewProjectUseCase(pr)
 	cuc := usecases.NewColorUseCase(cr)
 
-	httpServer, ruc := http.PrepareHTTPServer(iuc, luc, puc, cuc)
-
-	http.PrepareEndpoints(httpServer, ruc)
+	// Prepare HTTP Server
+	httpServer := rest.PrepareServer()
 
 	// Preparing mock endpoint to simulate External Api
 	externalapimock.PrepareEndpoints(httpServer)
 
-	// Start server
-	httpServer.Logger.Fatal(httpServer.Start(EndpointsBaseAddress))
+	// REST
+	restManager := rest.NewManager(iuc, luc, puc, cuc)
+	rootDirPath, err := helpers.GetProjectDirPath()
+	uiDirPath := filepath.Join(rootDirPath, "ui")
+	if err != nil {
+		log.Fatal(err)
+	}
+	rest.PrepareEndpoints(httpServer, restManager, uiDirPath)
+
+	// GraphQL
+	gqlSchema := gql.PrepareGraphQL(iuc, luc, puc, cuc)
+	gqlManager := gql.NewRequestManager(gqlSchema)
+	gql.PrepareEndpoints(httpServer, gqlManager)
+
+	// Start HTTP server
+	httpServer.Logger.Fatal(httpServer.Start(EndpointBaseAddress))
 }

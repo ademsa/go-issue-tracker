@@ -28,6 +28,12 @@ func (m *IssueRepositoryMock) FindByID(id uint) (domain.Issue, error) {
 	return args.Get(0).(domain.Issue), args.Error(1)
 }
 
+// Find mock
+func (m *IssueRepositoryMock) Find(title string, projectID uint, labels []string) ([]domain.Issue, error) {
+	args := m.Called(title, projectID, labels)
+	return args.Get(0).([]domain.Issue), args.Error(1)
+}
+
 // FindAll mock
 func (m *IssueRepositoryMock) FindAll() ([]domain.Issue, error) {
 	args := m.Called()

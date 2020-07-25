@@ -10,6 +10,7 @@ type LabelService interface {
 	Update(label Label) (Label, error)
 	FindByID(id uint) (Label, error)
 	FindByName(name string) (Label, error)
+	Find(name string) ([]Label, error)
 	FindAll() ([]Label, error)
 	Remove(id uint) (bool, error)
 }
@@ -85,6 +86,15 @@ func (s *labelService) FindByName(name string) (Label, error) {
 		return item, err
 	}
 	return item, nil
+}
+
+// Find to labels
+func (s *labelService) Find(name string) ([]Label, error) {
+	items, err := s.repository.Find(name)
+	if err != nil {
+		return items, err
+	}
+	return items, nil
 }
 
 // FindAll to find all labels

@@ -1,17 +1,17 @@
-package persistence_test
+package database_test
 
 import (
 	"errors"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
+	"go-issue-tracker/pkg/infrastructure/database"
 	"go-issue-tracker/pkg/infrastructure/helpers"
-	"go-issue-tracker/pkg/infrastructure/persistence"
 	"os"
 	"testing"
 )
 
 func TestGetDefaultSQLiteDBFilePath(t *testing.T) {
-	path, err := persistence.GetDefaultSQLiteDBFilePath()
+	path, err := database.GetDefaultSQLiteDBFilePath()
 
 	assert.Nil(t, err)
 	assert.NotNil(t, path)
@@ -25,7 +25,7 @@ func TestGetDefaultSQLiteDBFilePathErr(t *testing.T) {
 		helpers.ExecutablePath = os.Executable
 	}()
 
-	path, err := persistence.GetDefaultSQLiteDBFilePath()
+	path, err := database.GetDefaultSQLiteDBFilePath()
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "", path)
@@ -37,7 +37,7 @@ func TestGetSQLiteDB(t *testing.T) {
 		t.Fatalf("mock db error %s", err)
 	}
 
-	db, err := persistence.GetSQLiteDB(mockDB)
+	db, err := database.GetSQLiteDB(mockDB)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, db)
@@ -46,7 +46,7 @@ func TestGetSQLiteDB(t *testing.T) {
 func TestGetSQLiteDBErr(t *testing.T) {
 	mock := new(interface{})
 
-	db, err := persistence.GetSQLiteDB(mock)
+	db, err := database.GetSQLiteDB(mock)
 
 	assert.NotNil(t, err)
 	assert.Nil(t, db)

@@ -1,4 +1,4 @@
-package http_test
+package rest_test
 
 import (
 	"errors"
@@ -25,16 +25,16 @@ func TestAddIssue(t *testing.T) {
 		"test3": domain.Label{},
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	iucm.On("Add", i.Title, i.Description, i.Status, p, labels).Return(i, nil)
 	lucm.On("FindByName", mock.AnythingOfType("string")).Return(domain.Label{}, nil)
 	pucm.On("FindByID", mock.AnythingOfType("uint")).Return(p, nil)
 
-	body := strings.NewReader("project_id=1&title=test-title&description=test-description&status=1&labels=test1,test2,test3")
+	body := strings.NewReader("projectId=1&title=test-title&description=test-description&status=1&labels=test1,test2,test3")
 	c, rec := prepareHTTP(echo.POST, "/api/issues/new", body)
 
-	err := ruc.AddIssue(c)
+	err := m.AddIssue(c)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -43,26 +43,26 @@ func TestAddIssue(t *testing.T) {
 }
 
 func TestAddIssueValueErrs(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
-	var tests = []struct {
+	tests := []struct {
 		body *strings.Reader
 		err  error
 	}{
 		{
-			strings.NewReader("project_id=1&title=&description=test-description&status=1&labels=test1,test2,test3"),
+			strings.NewReader("projectId=1&title=&description=test-description&status=1&labels=test1,test2,test3"),
 			errors.New("title not provided"),
 		},
 		{
-			strings.NewReader("project_id=1&title=test-title&description=&status=1&labels=test1,test2,test3"),
+			strings.NewReader("projectId=1&title=test-title&description=&status=1&labels=test1,test2,test3"),
 			errors.New("description not provided"),
 		},
 		{
-			strings.NewReader("project_id=1&title=test-title&description=test-description&status=test&labels=test1,test2,test3"),
+			strings.NewReader("projectId=1&title=test-title&description=test-description&status=test&labels=test1,test2,test3"),
 			fmt.Errorf("strconv.Atoi: parsing \"%s\": invalid syntax", "test"),
 		},
 		{
-			strings.NewReader("project_id=test&title=test-title&description=test-description&status=1&labels=test1,test2,test3"),
+			strings.NewReader("projectId=test&title=test-title&description=test-description&status=1&labels=test1,test2,test3"),
 			fmt.Errorf("strconv.Atoi: parsing \"%s\": invalid syntax", "test"),
 		},
 	}
@@ -70,7 +70,7 @@ func TestAddIssueValueErrs(t *testing.T) {
 	for _, ts := range tests {
 		c, _ := prepareHTTP(echo.POST, "/api/issues/new", ts.body)
 
-		err := ruc.AddIssue(c)
+		err := m.AddIssue(c)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, ts.err.Error(), err.Error())
@@ -82,14 +82,14 @@ func TestAddIssueValueErrs(t *testing.T) {
 func TestAddIssueValueProjectNotFoundErr(t *testing.T) {
 	p := domain.Project{}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	pucm.On("FindByID", mock.AnythingOfType("uint")).Return(p, errors.New("project not found"))
 
-	body := strings.NewReader("project_id=1&title=test-title&description=test-description&status=1&labels=test1,test2,test3")
+	body := strings.NewReader("projectId=1&title=test-title&description=test-description&status=1&labels=test1,test2,test3")
 	c, _ := prepareHTTP(echo.POST, "/api/issues/new", body)
 
-	err := ruc.AddIssue(c)
+	err := m.AddIssue(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "project not found", err.Error())
@@ -100,22 +100,22 @@ func TestAddIssueValueProjectNotFoundErr(t *testing.T) {
 func TestAddIssueValueLabelErrs(t *testing.T) {
 	p := domain.Project{}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	pucm.On("FindByID", mock.AnythingOfType("uint")).Return(p, nil)
 
-	var tests = []struct {
+	tests := []struct {
 		body   *strings.Reader
 		err    error
 		mockOn bool
 	}{
 		{
-			strings.NewReader("project_id=1&title=test-title&description=test-description&status=1&labels="),
+			strings.NewReader("projectId=1&title=test-title&description=test-description&status=1&labels="),
 			errors.New("no labels assigned"),
 			false,
 		},
 		{
-			strings.NewReader("project_id=1&title=test-title&description=test-description&status=1&labels=test1,test2,test3"),
+			strings.NewReader("projectId=1&title=test-title&description=test-description&status=1&labels=test1,test2,test3"),
 			errors.New("label test1 is not valid"),
 			true,
 		},
@@ -127,7 +127,7 @@ func TestAddIssueValueLabelErrs(t *testing.T) {
 		}
 		c, _ := prepareHTTP(echo.POST, "/api/issues/new", ts.body)
 
-		err := ruc.AddIssue(c)
+		err := m.AddIssue(c)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, ts.err.Error(), err.Error())
@@ -152,16 +152,16 @@ func TestAddIssueErr(t *testing.T) {
 		"test3": domain.Label{},
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	pucm.On("FindByID", mock.AnythingOfType("uint")).Return(p, nil)
 	lucm.On("FindByName", mock.AnythingOfType("string")).Return(domain.Label{}, nil)
 	iucm.On("Add", i.Title, i.Description, i.Status, p, labels).Return(i, errors.New("test error"))
 
-	body := strings.NewReader("project_id=1&title=test-title&description=test-description&status=1&labels=test1,test2,test3")
+	body := strings.NewReader("projectId=1&title=test-title&description=test-description&status=1&labels=test1,test2,test3")
 	c, _ := prepareHTTP(echo.POST, "/api/issues/new", body)
 
-	err := ruc.AddIssue(c)
+	err := m.AddIssue(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "test error", err.Error())
@@ -183,7 +183,7 @@ func TestUpdateIssue(t *testing.T) {
 		"test3": domain.Label{},
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	lucm.On("FindByName", mock.AnythingOfType("string")).Return(domain.Label{}, nil)
 	iucm.On("Update", i.ID, i.Title, i.Description, i.Status, labels).Return(i, nil)
@@ -193,7 +193,7 @@ func TestUpdateIssue(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.UpdateIssue(c)
+	err := m.UpdateIssue(c)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -202,14 +202,14 @@ func TestUpdateIssue(t *testing.T) {
 }
 
 func TestUpdateIssueIDErr(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	body := strings.NewReader("title=test-title&description=test-description&status=1&labels=test1,test2,test3")
 	c, _ := prepareHTTP(echo.POST, "/api/issues/:id", body)
 	c.SetParamNames("id")
 	c.SetParamValues("test")
 
-	err := ruc.UpdateIssue(c)
+	err := m.UpdateIssue(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, fmt.Errorf("strconv.Atoi: parsing \"%s\": invalid syntax", "test").Error(), err.Error())
@@ -218,9 +218,9 @@ func TestUpdateIssueIDErr(t *testing.T) {
 }
 
 func TestUpdateIssueValueErrs(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
-	var tests = []struct {
+	tests := []struct {
 		body *strings.Reader
 		err  error
 	}{
@@ -243,7 +243,7 @@ func TestUpdateIssueValueErrs(t *testing.T) {
 		c.SetParamNames("id")
 		c.SetParamValues("1")
 
-		err := ruc.UpdateIssue(c)
+		err := m.UpdateIssue(c)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, ts.err.Error(), err.Error())
@@ -253,9 +253,9 @@ func TestUpdateIssueValueErrs(t *testing.T) {
 }
 
 func TestUpdateIssueValueLabelErrs(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
-	var tests = []struct {
+	tests := []struct {
 		body   *strings.Reader
 		err    error
 		mockOn bool
@@ -280,7 +280,7 @@ func TestUpdateIssueValueLabelErrs(t *testing.T) {
 		c.SetParamNames("id")
 		c.SetParamValues("1")
 
-		err := ruc.UpdateIssue(c)
+		err := m.UpdateIssue(c)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, ts.err.Error(), err.Error())
@@ -303,7 +303,7 @@ func TestUpdateIssueErr(t *testing.T) {
 		"test3": domain.Label{},
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	lucm.On("FindByName", mock.AnythingOfType("string")).Return(domain.Label{}, nil)
 	iucm.On("Update", i.ID, i.Title, i.Description, i.Status, labels).Return(i, errors.New("test error"))
@@ -313,7 +313,7 @@ func TestUpdateIssueErr(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.UpdateIssue(c)
+	err := m.UpdateIssue(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "test error", err.Error())
@@ -330,7 +330,7 @@ func TestFindIssueByID(t *testing.T) {
 		ProjectID:   1,
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	iucm.On("FindByID", i.ID).Return(i, nil)
 
@@ -338,7 +338,7 @@ func TestFindIssueByID(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.FindIssueByID(c)
+	err := m.FindIssueByID(c)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -347,13 +347,13 @@ func TestFindIssueByID(t *testing.T) {
 }
 
 func TestFindIssueByIDIDErr(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	c, _ := prepareHTTP(echo.GET, "/api/issues/:id", nil)
 	c.SetParamNames("id")
 	c.SetParamValues("test")
 
-	err := ruc.FindIssueByID(c)
+	err := m.FindIssueByID(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, fmt.Errorf("strconv.Atoi: parsing \"%s\": invalid syntax", "test").Error(), err.Error())
@@ -370,7 +370,7 @@ func TestFindIssueByIDNotFoundNoErr(t *testing.T) {
 		ProjectID:   1,
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	iucm.On("FindByID", i.ID).Return(i, errors.New("record not found"))
 
@@ -378,7 +378,7 @@ func TestFindIssueByIDNotFoundNoErr(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.FindIssueByID(c)
+	err := m.FindIssueByID(c)
 
 	assert.Nil(t, err)
 
@@ -394,7 +394,7 @@ func TestFindIssueByIDOtherErr(t *testing.T) {
 		ProjectID:   1,
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	iucm.On("FindByID", i.ID).Return(i, errors.New("test error"))
 
@@ -402,7 +402,54 @@ func TestFindIssueByIDOtherErr(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.FindIssueByID(c)
+	err := m.FindIssueByID(c)
+
+	assert.NotNil(t, err)
+	assert.Equal(t, "test error", err.Error())
+
+	checkAssertions(t, cucm, iucm, lucm, pucm)
+}
+
+func TestFindIssues(t *testing.T) {
+	i := []domain.Issue{}
+
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
+
+	iucm.On("Find", "test", uint(1), []string{"test1", "test2"}).Return(i, nil)
+
+	c, rec := prepareHTTP(echo.GET, "/api/issues/find?title=test&projectId=1&labels=test1,test2", nil)
+
+	err := m.FindIssues(c)
+
+	assert.Nil(t, err)
+	assert.Equal(t, 200, rec.Code)
+
+	checkAssertions(t, cucm, iucm, lucm, pucm)
+}
+
+func TestFindIssuesProjectIDErr(t *testing.T) {
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
+
+	c, _ := prepareHTTP(echo.GET, "/api/issues/find?title=test&projectId=test&labels=test1,test2", nil)
+
+	err := m.FindIssues(c)
+
+	assert.NotNil(t, err)
+	assert.Equal(t, fmt.Errorf("strconv.Atoi: parsing \"%s\": invalid syntax", "test").Error(), err.Error())
+
+	checkAssertions(t, cucm, iucm, lucm, pucm)
+}
+
+func TestFindIssuesErr(t *testing.T) {
+	i := []domain.Issue{}
+
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
+
+	iucm.On("Find", "test", uint(1), []string{"test1", "test2"}).Return(i, errors.New("test error"))
+
+	c, _ := prepareHTTP(echo.GET, "/api/issues/find?title=test&projectId=1&labels=test1,test2", nil)
+
+	err := m.FindIssues(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "test error", err.Error())
@@ -413,13 +460,13 @@ func TestFindIssueByIDOtherErr(t *testing.T) {
 func TestFindAllIssues(t *testing.T) {
 	i := []domain.Issue{}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	iucm.On("FindAll").Return(i, nil)
 
 	c, rec := prepareHTTP(echo.GET, "/api/issues", nil)
 
-	err := ruc.FindAllIssues(c)
+	err := m.FindAllIssues(c)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -430,13 +477,13 @@ func TestFindAllIssues(t *testing.T) {
 func TestFindAllIssuesErr(t *testing.T) {
 	i := []domain.Issue{}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	iucm.On("FindAll").Return(i, errors.New("test error"))
 
 	c, _ := prepareHTTP(echo.GET, "/api/issues", nil)
 
-	err := ruc.FindAllIssues(c)
+	err := m.FindAllIssues(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "test error", err.Error())
@@ -445,7 +492,7 @@ func TestFindAllIssuesErr(t *testing.T) {
 }
 
 func TestRemoveIssue(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	iucm.On("Remove", uint(1)).Return(true, nil)
 
@@ -453,7 +500,7 @@ func TestRemoveIssue(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.RemoveIssue(c)
+	err := m.RemoveIssue(c)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -462,7 +509,7 @@ func TestRemoveIssue(t *testing.T) {
 }
 
 func TestRemoveIssueNotFoundNoErr(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	iucm.On("Remove", uint(1)).Return(false, errors.New("record not found"))
 
@@ -470,7 +517,7 @@ func TestRemoveIssueNotFoundNoErr(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.RemoveIssue(c)
+	err := m.RemoveIssue(c)
 
 	assert.Nil(t, err)
 
@@ -478,7 +525,7 @@ func TestRemoveIssueNotFoundNoErr(t *testing.T) {
 }
 
 func TestRemoveIssueErr(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	iucm.On("Remove", uint(1)).Return(false, errors.New("test error"))
 
@@ -486,7 +533,7 @@ func TestRemoveIssueErr(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.RemoveIssue(c)
+	err := m.RemoveIssue(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "test error", err.Error())
@@ -495,13 +542,13 @@ func TestRemoveIssueErr(t *testing.T) {
 }
 
 func TestRemoveIssueIDErr(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	c, _ := prepareHTTP(echo.DELETE, "/api/issues/:id", nil)
 	c.SetParamNames("id")
 	c.SetParamValues("test")
 
-	err := ruc.RemoveIssue(c)
+	err := m.RemoveIssue(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, fmt.Errorf("strconv.Atoi: parsing \"%s\": invalid syntax", "test").Error(), err.Error())

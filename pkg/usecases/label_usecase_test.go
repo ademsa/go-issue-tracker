@@ -24,12 +24,12 @@ func TestUseCaseLabelNewLabelUseCase(t *testing.T) {
 }
 
 func TestUseCaseLabelAdd(t *testing.T) {
-	v := new(domain.Label)
-	v.Name = "test-name"
-	v.ColorHexCode = "FFFFFF"
+	l := new(domain.Label)
+	l.Name = "test-name"
+	l.ColorHexCode = "FFFFFF"
 
 	ms := new(dTesting.LabelServiceMock)
-	ms.On("Add", v).Return(v, nil)
+	ms.On("Add", l).Return(l, nil)
 	domain.GetDefaultLabelService = func(r domain.LabelRepository) domain.LabelService {
 		return ms
 	}
@@ -41,23 +41,23 @@ func TestUseCaseLabelAdd(t *testing.T) {
 
 	assert.NotNil(t, uc)
 
-	item, err := uc.Add(v.Name, v.ColorHexCode)
+	item, err := uc.Add(l.Name, l.ColorHexCode)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, l, item)
 
 	ms.AssertExpectations(t)
 	mr.AssertExpectations(t)
 }
 
 func TestUseCaseLabelAddErr(t *testing.T) {
-	v := new(domain.Label)
-	v.Name = "test-name"
-	v.ColorHexCode = "FFFFFF"
+	l := new(domain.Label)
+	l.Name = "test-name"
+	l.ColorHexCode = "FFFFFF"
 
 	ms := new(dTesting.LabelServiceMock)
-	ms.On("Add", v).Return(new(domain.Label), errors.New("test error"))
+	ms.On("Add", l).Return(new(domain.Label), errors.New("test error"))
 	domain.GetDefaultLabelService = func(r domain.LabelRepository) domain.LabelService {
 		return ms
 	}
@@ -69,7 +69,7 @@ func TestUseCaseLabelAddErr(t *testing.T) {
 
 	assert.NotNil(t, uc)
 
-	item, err := uc.Add(v.Name, v.ColorHexCode)
+	item, err := uc.Add(l.Name, l.ColorHexCode)
 
 	assert.NotNil(t, err)
 	assert.Nil(t, item)
@@ -79,14 +79,14 @@ func TestUseCaseLabelAddErr(t *testing.T) {
 }
 
 func TestUseCaseLabelUpdate(t *testing.T) {
-	vf := domain.Label{}
-	vf.Name = "test-name"
-	vf.ColorHexCode = "FFFFFF"
-	vu := vf
+	lf := domain.Label{}
+	lf.Name = "test-name"
+	lf.ColorHexCode = "FFFFFF"
+	lu := lf
 
 	ms := new(dTesting.LabelServiceMock)
-	ms.On("FindByID", vf.ID).Return(vf, nil)
-	ms.On("Update", vu).Return(vu, nil)
+	ms.On("FindByID", lf.ID).Return(lf, nil)
+	ms.On("Update", lu).Return(lu, nil)
 	domain.GetDefaultLabelService = func(r domain.LabelRepository) domain.LabelService {
 		return ms
 	}
@@ -98,25 +98,25 @@ func TestUseCaseLabelUpdate(t *testing.T) {
 
 	assert.NotNil(t, uc)
 
-	item, err := uc.Update(vf.ID, vf.Name, vf.ColorHexCode)
+	item, err := uc.Update(lf.ID, lf.Name, lf.ColorHexCode)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, vu, item)
+	assert.Equal(t, lu, item)
 
 	ms.AssertExpectations(t)
 	mr.AssertExpectations(t)
 }
 
 func TestUseCaseLabelUpdateErr(t *testing.T) {
-	vf := domain.Label{}
-	vf.Name = "test-name"
-	vf.ColorHexCode = "FFFFFF"
-	vu := vf
+	lf := domain.Label{}
+	lf.Name = "test-name"
+	lf.ColorHexCode = "FFFFFF"
+	lu := lf
 
 	ms := new(dTesting.LabelServiceMock)
-	ms.On("FindByID", vf.ID).Return(vf, nil)
-	ms.On("Update", vu).Return(vu, errors.New("test error"))
+	ms.On("FindByID", lf.ID).Return(lf, nil)
+	ms.On("Update", lu).Return(lu, errors.New("test error"))
 	domain.GetDefaultLabelService = func(r domain.LabelRepository) domain.LabelService {
 		return ms
 	}
@@ -128,11 +128,11 @@ func TestUseCaseLabelUpdateErr(t *testing.T) {
 
 	assert.NotNil(t, uc)
 
-	item, err := uc.Update(vf.ID, vf.Name, vf.ColorHexCode)
+	item, err := uc.Update(lf.ID, lf.Name, lf.ColorHexCode)
 
 	assert.NotNil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, vu, item)
+	assert.Equal(t, lu, item)
 
 	ms.AssertExpectations(t)
 	mr.AssertExpectations(t)
@@ -163,12 +163,12 @@ func TestUseCaseLabelUpdateFindByIDErr(t *testing.T) {
 }
 
 func TestUseCaseLabelFindByID(t *testing.T) {
-	v := domain.Label{}
-	v.Name = "test-name"
-	v.ColorHexCode = "FFFFFF"
+	l := domain.Label{}
+	l.Name = "test-name"
+	l.ColorHexCode = "FFFFFF"
 
 	ms := new(dTesting.LabelServiceMock)
-	ms.On("FindByID", v.ID).Return(v, nil)
+	ms.On("FindByID", l.ID).Return(l, nil)
 	domain.GetDefaultLabelService = func(r domain.LabelRepository) domain.LabelService {
 		return ms
 	}
@@ -180,23 +180,23 @@ func TestUseCaseLabelFindByID(t *testing.T) {
 
 	assert.NotNil(t, uc)
 
-	item, err := uc.FindByID(v.ID)
+	item, err := uc.FindByID(l.ID)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, l, item)
 
 	ms.AssertExpectations(t)
 	mr.AssertExpectations(t)
 }
 
 func TestUseCaseLabelFindByIDErr(t *testing.T) {
-	v := domain.Label{}
-	v.Name = "test-name"
-	v.ColorHexCode = "FFFFFF"
+	l := domain.Label{}
+	l.Name = "test-name"
+	l.ColorHexCode = "FFFFFF"
 
 	ms := new(dTesting.LabelServiceMock)
-	ms.On("FindByID", v.ID).Return(v, errors.New("test error"))
+	ms.On("FindByID", l.ID).Return(l, errors.New("test error"))
 	domain.GetDefaultLabelService = func(r domain.LabelRepository) domain.LabelService {
 		return ms
 	}
@@ -208,23 +208,23 @@ func TestUseCaseLabelFindByIDErr(t *testing.T) {
 
 	assert.NotNil(t, uc)
 
-	item, err := uc.FindByID(v.ID)
+	item, err := uc.FindByID(l.ID)
 
 	assert.NotNil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, l, item)
 
 	ms.AssertExpectations(t)
 	mr.AssertExpectations(t)
 }
 
 func TestUseCaseLabelFindByName(t *testing.T) {
-	v := domain.Label{}
-	v.Name = "test-name"
-	v.ColorHexCode = "FFFFFF"
+	l := domain.Label{}
+	l.Name = "test-name"
+	l.ColorHexCode = "FFFFFF"
 
 	ms := new(dTesting.LabelServiceMock)
-	ms.On("FindByName", v.Name).Return(v, nil)
+	ms.On("FindByName", l.Name).Return(l, nil)
 	domain.GetDefaultLabelService = func(r domain.LabelRepository) domain.LabelService {
 		return ms
 	}
@@ -236,23 +236,23 @@ func TestUseCaseLabelFindByName(t *testing.T) {
 
 	assert.NotNil(t, uc)
 
-	item, err := uc.FindByName(v.Name)
+	item, err := uc.FindByName(l.Name)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, l, item)
 
 	ms.AssertExpectations(t)
 	mr.AssertExpectations(t)
 }
 
 func TestUseCaseLabelFindByNameErr(t *testing.T) {
-	v := domain.Label{}
-	v.Name = "test-name"
-	v.ColorHexCode = "FFFFFF"
+	l := domain.Label{}
+	l.Name = "test-name"
+	l.ColorHexCode = "FFFFFF"
 
 	ms := new(dTesting.LabelServiceMock)
-	ms.On("FindByName", v.Name).Return(v, errors.New("test error"))
+	ms.On("FindByName", l.Name).Return(l, errors.New("test error"))
 	domain.GetDefaultLabelService = func(r domain.LabelRepository) domain.LabelService {
 		return ms
 	}
@@ -264,11 +264,72 @@ func TestUseCaseLabelFindByNameErr(t *testing.T) {
 
 	assert.NotNil(t, uc)
 
-	item, err := uc.FindByName(v.Name)
+	item, err := uc.FindByName(l.Name)
 
 	assert.NotNil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, l, item)
+
+	ms.AssertExpectations(t)
+	mr.AssertExpectations(t)
+}
+
+func TestUseCaseLabelFind(t *testing.T) {
+	labels := []domain.Label{
+		domain.Label{
+			Name:         "test-name-1",
+			ColorHexCode: "FFFFFF",
+		},
+		domain.Label{
+			Name:         "test-name-2",
+			ColorHexCode: "FFFFFF",
+		},
+	}
+
+	ms := new(dTesting.LabelServiceMock)
+	ms.On("Find", "test").Return(labels, nil)
+	domain.GetDefaultLabelService = func(r domain.LabelRepository) domain.LabelService {
+		return ms
+	}
+	defer domain.ResetDefaultLabelService()
+
+	mr := new(dTesting.LabelRepositoryMock)
+
+	uc := usecases.NewLabelUseCase(mr)
+
+	assert.NotNil(t, uc)
+
+	items, err := uc.Find("test")
+
+	assert.Nil(t, err)
+	assert.NotNil(t, items)
+	assert.Equal(t, labels, items)
+
+	ms.AssertExpectations(t)
+	mr.AssertExpectations(t)
+}
+
+func TestUseCaseLabelFindErr(t *testing.T) {
+	labels := []domain.Label{}
+
+	ms := new(dTesting.LabelServiceMock)
+	ms.On("Find", "test").Return(labels, errors.New("test error"))
+	domain.GetDefaultLabelService = func(r domain.LabelRepository) domain.LabelService {
+		return ms
+	}
+	defer domain.ResetDefaultLabelService()
+
+	mr := new(dTesting.LabelRepositoryMock)
+
+	uc := usecases.NewLabelUseCase(mr)
+
+	assert.NotNil(t, uc)
+
+	items, err := uc.Find("test")
+
+	assert.NotNil(t, err)
+	assert.NotNil(t, items)
+	assert.Equal(t, labels, items)
 
 	ms.AssertExpectations(t)
 	mr.AssertExpectations(t)

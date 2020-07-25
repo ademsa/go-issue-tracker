@@ -24,7 +24,7 @@ func TestNewColorRepository(t *testing.T) {
 }
 
 func TestGetColor(t *testing.T) {
-	expectedColor := domain.Color{
+	ec := domain.Color{
 		HexCode: "2979FF",
 	}
 
@@ -38,11 +38,11 @@ func TestGetColor(t *testing.T) {
 
 	r := externalapi.NewColorRepository(ts.URL, http.DefaultClient)
 
-	actualColor, err := r.GetColor()
+	ac, err := r.GetColor()
 
 	assert.Nil(t, err)
-	assert.NotNil(t, actualColor)
-	assert.Equal(t, expectedColor, actualColor)
+	assert.NotNil(t, ac)
+	assert.Equal(t, ec, ac)
 }
 
 func TestGetColorErr(t *testing.T) {

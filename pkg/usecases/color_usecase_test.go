@@ -24,12 +24,12 @@ func TestUseCaseColorNewColorUseCase(t *testing.T) {
 }
 
 func TestUseCaseColorGetColor(t *testing.T) {
-	v := domain.Color{
-		HexCode: "FF0000",
+	c := domain.Color{
+		HexCode: "FFFFFF",
 	}
 
 	ms := new(dTesting.ColorServiceMock)
-	ms.On("GetColor").Return(v, nil)
+	ms.On("GetColor").Return(c, nil)
 	domain.GetDefaultColorService = func(r domain.ColorRepository) domain.ColorService {
 		return ms
 	}
@@ -45,7 +45,7 @@ func TestUseCaseColorGetColor(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.NotNil(t, item)
-	assert.Equal(t, v, item)
+	assert.Equal(t, c, item)
 
 	ms.AssertExpectations(t)
 	mr.AssertExpectations(t)

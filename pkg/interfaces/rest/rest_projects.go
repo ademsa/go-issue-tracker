@@ -1,4 +1,4 @@
-package http
+package rest
 
 import (
 	"errors"
@@ -6,14 +6,14 @@ import (
 )
 
 // RemoveLabel to add new project
-func (ruc *restUseCase) AddProject(c echo.Context) error {
+func (m *manager) AddProject(c echo.Context) error {
 	name := c.FormValue("name")
 	if name == "" {
 		return errors.New("name not provided")
 	}
 	description := c.FormValue("description")
 
-	item, err := ruc.puc.Add(name, description)
+	item, err := m.puc.Add(name, description)
 	if err != nil {
 		return err
 	}
@@ -24,7 +24,7 @@ func (ruc *restUseCase) AddProject(c echo.Context) error {
 }
 
 // UpdateProject to update project
-func (ruc *restUseCase) UpdateProject(c echo.Context) error {
+func (m *manager) UpdateProject(c echo.Context) error {
 	id, err := getID(c)
 	if err != nil {
 		return err
@@ -36,7 +36,7 @@ func (ruc *restUseCase) UpdateProject(c echo.Context) error {
 	}
 	description := c.FormValue("description")
 
-	item, err := ruc.puc.Update(id, name, description)
+	item, err := m.puc.Update(id, name, description)
 	if err != nil {
 		return err
 	}
@@ -47,13 +47,13 @@ func (ruc *restUseCase) UpdateProject(c echo.Context) error {
 }
 
 // FindProjectByID to find project by ID
-func (ruc *restUseCase) FindProjectByID(c echo.Context) error {
+func (m *manager) FindProjectByID(c echo.Context) error {
 	id, err := getID(c)
 	if err != nil {
 		return err
 	}
 
-	item, err := ruc.puc.FindByID(uint(id))
+	item, err := m.puc.FindByID(uint(id))
 	if err != nil {
 		if err.Error() == "record not found" {
 			return c.JSON(200, map[string]interface{}{
@@ -68,9 +68,21 @@ func (ruc *restUseCase) FindProjectByID(c echo.Context) error {
 	})
 }
 
+// FindProjects to find labels
+func (m *manager) FindProjects(c echo.Context) error {
+	name := c.QueryParam("name")
+	items, err := m.puc.Find(name)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, map[string]interface{}{
+		"items": items,
+	})
+}
+
 // FindAllProjects to find all projects
-func (ruc *restUseCase) FindAllProjects(c echo.Context) error {
-	items, err := ruc.puc.FindAll()
+func (m *manager) FindAllProjects(c echo.Context) error {
+	items, err := m.puc.FindAll()
 	if err != nil {
 		return err
 	}
@@ -81,13 +93,13 @@ func (ruc *restUseCase) FindAllProjects(c echo.Context) error {
 }
 
 // RemoveProject to remove project
-func (ruc *restUseCase) RemoveProject(c echo.Context) error {
+func (m *manager) RemoveProject(c echo.Context) error {
 	id, err := getID(c)
 	if err != nil {
 		return err
 	}
 
-	status, err := ruc.puc.Remove(id)
+	status, err := m.puc.Remove(id)
 	if err != nil {
 		if err.Error() == "record not found" {
 			return c.JSON(200, map[string]interface{}{

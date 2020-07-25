@@ -9,6 +9,7 @@ type ProjectUseCase interface {
 	Add(name string, description string) (*domain.Project, error)
 	Update(id uint, name string, description string) (domain.Project, error)
 	FindByID(id uint) (domain.Project, error)
+	Find(name string) ([]domain.Project, error)
 	FindAll() ([]domain.Project, error)
 	Remove(id uint) (bool, error)
 }
@@ -27,7 +28,7 @@ func NewProjectUseCase(repository domain.ProjectRepository) ProjectUseCase {
 
 // Add to add new project
 func (uc *projectUseCase) Add(name string, description string) (*domain.Project, error) {
-	var item = new(domain.Project)
+	item := new(domain.Project)
 	item.Name = name
 	item.Description = description
 	itemAdded, err := uc.service.Add(item)
@@ -60,6 +61,15 @@ func (uc *projectUseCase) FindByID(id uint) (domain.Project, error) {
 		return item, err
 	}
 	return item, nil
+}
+
+// Find to find project by name
+func (uc *projectUseCase) Find(name string) ([]domain.Project, error) {
+	items, err := uc.service.Find(name)
+	if err != nil {
+		return items, err
+	}
+	return items, nil
 }
 
 // FindAll to find all projects

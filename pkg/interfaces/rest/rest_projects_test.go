@@ -1,4 +1,4 @@
-package http_test
+package rest_test
 
 import (
 	"errors"
@@ -16,14 +16,14 @@ func TestAddProject(t *testing.T) {
 		Description: "test-description",
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	pucm.On("Add", p.Name, p.Description).Return(p, nil)
 
 	body := strings.NewReader("name=test-name&description=test-description")
 	c, rec := prepareHTTP(echo.POST, "/api/projects/new", body)
 
-	err := ruc.AddProject(c)
+	err := m.AddProject(c)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -32,9 +32,9 @@ func TestAddProject(t *testing.T) {
 }
 
 func TestAddProjectValueErrs(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
-	var tests = []struct {
+	tests := []struct {
 		body *strings.Reader
 		err  error
 	}{
@@ -47,7 +47,7 @@ func TestAddProjectValueErrs(t *testing.T) {
 	for _, ts := range tests {
 		c, _ := prepareHTTP(echo.POST, "/api/projects/new", ts.body)
 
-		err := ruc.AddProject(c)
+		err := m.AddProject(c)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, ts.err.Error(), err.Error())
@@ -62,14 +62,14 @@ func TestAddProjectErr(t *testing.T) {
 		Description: "test-description",
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	pucm.On("Add", p.Name, p.Description).Return(p, errors.New("test error"))
 
 	body := strings.NewReader("name=test-name&description=test-description")
 	c, _ := prepareHTTP(echo.POST, "/api/projects/new", body)
 
-	err := ruc.AddProject(c)
+	err := m.AddProject(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "test error", err.Error())
@@ -84,7 +84,7 @@ func TestUpdateProject(t *testing.T) {
 		Description: "test-description",
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	pucm.On("Update", p.ID, p.Name, p.Description).Return(p, nil)
 
@@ -93,7 +93,7 @@ func TestUpdateProject(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.UpdateProject(c)
+	err := m.UpdateProject(c)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -102,14 +102,14 @@ func TestUpdateProject(t *testing.T) {
 }
 
 func TestUpdateProjectIDErr(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	body := strings.NewReader("name=test-name&description=test-description")
 	c, _ := prepareHTTP(echo.POST, "/api/projects/:id", body)
 	c.SetParamNames("id")
 	c.SetParamValues("test")
 
-	err := ruc.UpdateProject(c)
+	err := m.UpdateProject(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, fmt.Errorf("strconv.Atoi: parsing \"%s\": invalid syntax", "test").Error(), err.Error())
@@ -118,9 +118,9 @@ func TestUpdateProjectIDErr(t *testing.T) {
 }
 
 func TestUpdateProjectValueErrs(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
-	var tests = []struct {
+	tests := []struct {
 		body *strings.Reader
 		err  error
 	}{
@@ -135,7 +135,7 @@ func TestUpdateProjectValueErrs(t *testing.T) {
 		c.SetParamNames("id")
 		c.SetParamValues("1")
 
-		err := ruc.UpdateProject(c)
+		err := m.UpdateProject(c)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, ts.err.Error(), err.Error())
@@ -151,7 +151,7 @@ func TestUpdateProjectErr(t *testing.T) {
 		Description: "test-description",
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	pucm.On("Update", p.ID, p.Name, p.Description).Return(p, errors.New("test error"))
 
@@ -160,7 +160,7 @@ func TestUpdateProjectErr(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.UpdateProject(c)
+	err := m.UpdateProject(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "test error", err.Error())
@@ -175,7 +175,7 @@ func TestFindProjectByID(t *testing.T) {
 		Description: "test-description",
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	pucm.On("FindByID", p.ID).Return(p, nil)
 
@@ -183,7 +183,7 @@ func TestFindProjectByID(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.FindProjectByID(c)
+	err := m.FindProjectByID(c)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -192,13 +192,13 @@ func TestFindProjectByID(t *testing.T) {
 }
 
 func TestFindProjectByIDIDErr(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	c, _ := prepareHTTP(echo.GET, "/api/projects/:id", nil)
 	c.SetParamNames("id")
 	c.SetParamValues("test")
 
-	err := ruc.FindProjectByID(c)
+	err := m.FindProjectByID(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, fmt.Errorf("strconv.Atoi: parsing \"%s\": invalid syntax", "test").Error(), err.Error())
@@ -213,7 +213,7 @@ func TestFindProjectByIDNotFoundNoErr(t *testing.T) {
 		Description: "test-description",
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	pucm.On("FindByID", p.ID).Return(p, errors.New("record not found"))
 
@@ -221,7 +221,7 @@ func TestFindProjectByIDNotFoundNoErr(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.FindProjectByID(c)
+	err := m.FindProjectByID(c)
 
 	assert.Nil(t, err)
 
@@ -235,7 +235,7 @@ func TestFindProjectByIDOtherErr(t *testing.T) {
 		Description: "test-description",
 	}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	pucm.On("FindByID", p.ID).Return(p, errors.New("test error"))
 
@@ -243,7 +243,41 @@ func TestFindProjectByIDOtherErr(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.FindProjectByID(c)
+	err := m.FindProjectByID(c)
+
+	assert.NotNil(t, err)
+	assert.Equal(t, "test error", err.Error())
+
+	checkAssertions(t, cucm, iucm, lucm, pucm)
+}
+
+func TestFindProjects(t *testing.T) {
+	p := []domain.Project{}
+
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
+
+	pucm.On("Find", "test").Return(p, nil)
+
+	c, rec := prepareHTTP(echo.GET, "/api/projects/find?name=test", nil)
+
+	err := m.FindProjects(c)
+
+	assert.Nil(t, err)
+	assert.Equal(t, 200, rec.Code)
+
+	checkAssertions(t, cucm, iucm, lucm, pucm)
+}
+
+func TestFindProjectsErr(t *testing.T) {
+	p := []domain.Project{}
+
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
+
+	pucm.On("Find", "test").Return(p, errors.New("test error"))
+
+	c, _ := prepareHTTP(echo.GET, "/api/projects/find?name=test", nil)
+
+	err := m.FindProjects(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "test error", err.Error())
@@ -254,13 +288,13 @@ func TestFindProjectByIDOtherErr(t *testing.T) {
 func TestFindAllProjects(t *testing.T) {
 	p := []domain.Project{}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	pucm.On("FindAll").Return(p, nil)
 
 	c, rec := prepareHTTP(echo.GET, "/api/projects", nil)
 
-	err := ruc.FindAllProjects(c)
+	err := m.FindAllProjects(c)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -271,13 +305,13 @@ func TestFindAllProjects(t *testing.T) {
 func TestFindAllProjectsErr(t *testing.T) {
 	p := []domain.Project{}
 
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	pucm.On("FindAll").Return(p, errors.New("test error"))
 
 	c, _ := prepareHTTP(echo.GET, "/api/projects", nil)
 
-	err := ruc.FindAllProjects(c)
+	err := m.FindAllProjects(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "test error", err.Error())
@@ -286,7 +320,7 @@ func TestFindAllProjectsErr(t *testing.T) {
 }
 
 func TestRemoveProject(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	pucm.On("Remove", uint(1)).Return(true, nil)
 
@@ -294,7 +328,7 @@ func TestRemoveProject(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.RemoveProject(c)
+	err := m.RemoveProject(c)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, rec.Code)
@@ -303,7 +337,7 @@ func TestRemoveProject(t *testing.T) {
 }
 
 func TestRemoveProjectNotFoundNoErr(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	pucm.On("Remove", uint(1)).Return(false, errors.New("record not found"))
 
@@ -311,7 +345,7 @@ func TestRemoveProjectNotFoundNoErr(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.RemoveProject(c)
+	err := m.RemoveProject(c)
 
 	assert.Nil(t, err)
 
@@ -319,7 +353,7 @@ func TestRemoveProjectNotFoundNoErr(t *testing.T) {
 }
 
 func TestRemoveProjectErr(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	pucm.On("Remove", uint(1)).Return(false, errors.New("test error"))
 
@@ -327,7 +361,7 @@ func TestRemoveProjectErr(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ruc.RemoveProject(c)
+	err := m.RemoveProject(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "test error", err.Error())
@@ -336,13 +370,13 @@ func TestRemoveProjectErr(t *testing.T) {
 }
 
 func TestRemoveProjectIDErr(t *testing.T) {
-	cucm, iucm, lucm, pucm, ruc := prepareMocksAndRUC()
+	cucm, iucm, lucm, pucm, m := prepareMocksAndRUC()
 
 	c, _ := prepareHTTP(echo.DELETE, "/api/projects/:id", nil)
 	c.SetParamNames("id")
 	c.SetParamValues("test")
 
-	err := ruc.RemoveProject(c)
+	err := m.RemoveProject(c)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, fmt.Errorf("strconv.Atoi: parsing \"%s\": invalid syntax", "test").Error(), err.Error())
