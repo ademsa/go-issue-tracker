@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"go-issue-tracker/pkg/infrastructure/helpers"
+	"path/filepath"
 )
 
 // RootMessage is displayed in / path
@@ -21,7 +22,8 @@ func PrepareServer() *echo.Echo {
 	server.Use(middleware.Logger())
 
 	server.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:8000", "http://localhost:3000"},
+		AllowOrigins: []string{"http://localhost:3000", "http://127.0.0.1:3000",
+			"http://127.0.0.1:8000", "http://localhost:8000"},
 	}))
 
 	return server
@@ -30,7 +32,13 @@ func PrepareServer() *echo.Echo {
 // PrepareEndpoints function to prepare endpoints
 func PrepareEndpoints(e *echo.Echo, m Manager, uiDirPath string) {
 	if helpers.PathExists(uiDirPath) {
-		e.Static("/", uiDirPath)
+		e.Static("/static", filepath.Join(uiDirPath, "static"))
+		e.File("/favicon.ico", filepath.Join(uiDirPath, "favicon.ico"))
+		e.File("/logo192x192.png", filepath.Join(uiDirPath, "logo192x192.png"))
+		e.File("/logo512x512.png", filepath.Join(uiDirPath, "logo512x512.png"))
+		e.File("/robots.txt", filepath.Join(uiDirPath, "robots.txt"))
+		e.File("/manifest.json", filepath.Join(uiDirPath, "manifest.json"))
+		e.File("/*", filepath.Join(uiDirPath, "index.html"))
 	} else {
 		e.GET("/", func(c echo.Context) error {
 			return c.String(200, RootMessage)
