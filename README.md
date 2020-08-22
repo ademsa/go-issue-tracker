@@ -1,4 +1,4 @@
-# go-issue-tracker
+# Go Issue Tracker
 
 A very basic Issue Tracker built using Go and following principles from Uncle Bob's *Clean Architecture*
 
