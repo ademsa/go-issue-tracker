@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-var testUrl = "http://127.0.0.1:8000/externalapimock/color"
+var testUrl = "http://0.0.0.0:3001/externalapimock/color"
 
 func TestNewColorRepository(t *testing.T) {
 	r := externalapi.NewColorRepository(testUrl, http.DefaultClient)

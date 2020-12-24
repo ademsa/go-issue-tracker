@@ -17,7 +17,7 @@ import (
 )
 
 // EndpointBaseAddress is base path
-var EndpointBaseAddress = "127.0.0.1:8000"
+var EndpointBaseAddress = "0.0.0.0:3001"
 
 func main() {
 	// Get db path

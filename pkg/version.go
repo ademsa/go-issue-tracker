@@ -1,4 +1,4 @@
 package version
 
 // Version of package
-var Version = "0.1.3"
+var Version = "0.2.0"
