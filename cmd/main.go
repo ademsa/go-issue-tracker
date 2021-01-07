@@ -1,12 +1,15 @@
 package main
 
 import (
+	"flag"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"go-issue-tracker/pkg/domain"
 	"go-issue-tracker/pkg/infrastructure/database"
 	"go-issue-tracker/pkg/infrastructure/helpers"
 	"go-issue-tracker/pkg/interfaces/externalapi"
 	"go-issue-tracker/pkg/interfaces/externalapimock"
 	"go-issue-tracker/pkg/interfaces/gql"
+	"go-issue-tracker/pkg/interfaces/grpc"
 	"go-issue-tracker/pkg/interfaces/persistence"
 	"go-issue-tracker/pkg/interfaces/rest"
 	"go-issue-tracker/pkg/usecases"
@@ -19,7 +22,13 @@ import (
 // EndpointBaseAddress is base path
 var EndpointBaseAddress = "0.0.0.0:3001"
 
+// GRPCEndpointAddress is path to gRPC Color Service
+var GRPCEndpointAddress = "0.0.0.0:3002"
+
 func main() {
+	grpcStatus := flag.Bool("grpc", false, "Use gRPC Color Service")
+	flag.Parse()
+
 	// Get db path
 	dbPath, err := database.GetDefaultSQLiteDBFilePath()
 	if err != nil {
@@ -38,18 +47,25 @@ func main() {
 	lr := persistence.NewSQLiteLabelRepository(db)
 	pr := persistence.NewSQLiteProjectRepository(db)
 
-	// HTTP Client for making calls to color repository
-	httpClient := &http.Client{
-		Timeout: 30 * time.Second,
-	}
-
-	// External API repository
-	cr := externalapi.NewColorRepository("http://"+EndpointBaseAddress+externalapimock.ExternalAPIMockPath, httpClient)
-
 	// Use Cases
 	iuc := usecases.NewIssueUseCase(ir)
 	luc := usecases.NewLabelUseCase(lr)
 	puc := usecases.NewProjectUseCase(pr)
+
+	var cr domain.ColorRepository
+	if *grpcStatus == true {
+		// External gRPC Color Service
+		cr = grpc.NewColorRepository(GRPCEndpointAddress)
+	} else {
+		// HTTP Client for making calls to color repository
+		httpClient := &http.Client{
+			Timeout: 30 * time.Second,
+		}
+
+		// External API repository
+		cr = externalapi.NewColorRepository("http://"+EndpointBaseAddress+externalapimock.ExternalAPIMockPath, httpClient)
+	}
+
 	cuc := usecases.NewColorUseCase(cr)
 
 	// Prepare HTTP Server
